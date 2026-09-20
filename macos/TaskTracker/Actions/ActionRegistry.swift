@@ -12,6 +12,10 @@ enum ActionContext: String, CaseIterable {
     case anyView
     /// Odak listesi klavyeyi dinlerken — modifier'sız tek tuşlar.
     case todayList
+    /// Yüzen mini panel klavyeyi dinlerken.
+    case miniPanel
+    /// Yüzen liste paneli; ayrıca `.todayList` aksiyonlarının hepsi burada da geçerlidir.
+    case listPanel
     /// Hızlı ekleme paneli — tuşları metin alanı yakalar; burada yalnızca belgelenir.
     case quickAdd
 
@@ -21,6 +25,8 @@ enum ActionContext: String, CaseIterable {
         case .mainWindow: "ANA PENCERE"
         case .anyView: "HER GÖRÜNÜM"
         case .todayList: "ODAK LİSTESİ"
+        case .miniPanel: "MİNİ PANEL"
+        case .listPanel: "LİSTE PANELİ (+ odak listesi tuşları)"
         case .quickAdd: "HIZLI EKLEME"
         }
     }

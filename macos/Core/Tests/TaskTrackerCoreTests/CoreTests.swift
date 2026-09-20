@@ -12,6 +12,34 @@ import Testing
     }
 }
 
+@Suite struct TimerTests {
+    func state(_ startedAt: String, _ duration: Int) throws -> ActiveState {
+        let json = "{\"state\":{\"current_task\":\"\",\"timer_started_at\":\"\(startedAt)\",\"timer_duration\":\(duration)},\"task\":null}"
+        return try JSONDecoder().decode(ActiveState.self, from: Data(json.utf8))
+    }
+
+    @Test func parsesPocketBaseDates() {
+        let date = PBDate.parse("2026-09-20 16:45:00.500Z")
+        #expect(date?.timeIntervalSince1970 == 1_789_922_700.5)
+        #expect(PBDate.parse("") == nil)
+        #expect(PBDate.parse("bozuk") == nil)
+    }
+
+    @Test func fractionCountsDown() throws {
+        let active = try state("2026-09-20 16:45:00.000Z", 600)
+        let start = PBDate.parse("2026-09-20 16:45:00.000Z")!
+        #expect(active.timerEnd == start.addingTimeInterval(600))
+        #expect(active.timerFraction(at: start) == 1)
+        #expect(active.timerFraction(at: start.addingTimeInterval(150)) == 0.75)
+        #expect(active.timerFraction(at: start.addingTimeInterval(9999)) == 0)
+    }
+
+    @Test func noTimerMeansNil() throws {
+        #expect(try state("", 0).timerEnd == nil)
+        #expect(try state("", 0).timerFraction(at: .now) == nil)
+    }
+}
+
 @Suite struct DecodingTests {
     @Test func taskWithEmptyOptionalFields() throws {
         let json = """

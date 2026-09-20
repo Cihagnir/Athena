@@ -1,5 +1,6 @@
 import AppKit
 import Observation
+import SwiftUI
 import TaskTrackerCore
 
 enum Route: String, CaseIterable, Identifiable {
@@ -45,6 +46,7 @@ final class AppState {
     let projects: ProjectStore
     let active: ActiveTaskStore
     let quickAdd: QuickAddController
+    let panel: PanelController
 
     private(set) var phase: Phase = .checking
     var route: Route = .today { didSet { overlay = nil } }
@@ -62,6 +64,7 @@ final class AppState {
         projects = ProjectStore(backend: backend)
         active = ActiveTaskStore(backend: backend)
         quickAdd = QuickAddController(backend: backend)
+        panel = PanelController(settings: settings, active: active, today: today)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
         registry.register(AppActions.all(for: self))
         // Görünümden bağımsız: pencere açılışta kapalı olsa da (login item) oturum kurulur.
@@ -135,17 +138,22 @@ final class AppState {
         phase = .loggedIn
         realtimeTask?.cancel()
         realtimeTask = Task { await runRealtime() }
+        panel.showIfEnabled { AnyView(PanelView().environment(self)) }
         applyDebugLaunchOptions()
     }
 
     /// Yalnızca DEBUG: ekranları klavyesiz doğrulamak için (macos/README.md → Doğrulama).
     ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help   TT_DEBUG_DETAILS=1
+    ///   TT_DEBUG_PANEL=listen|expanded|timer|list   (yüzen panelin halleri)
     ///   TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma // not"
     private func applyDebugLaunchOptions() {
         #if DEBUG
         let env = ProcessInfo.processInfo.environment
         if let route = env["TT_DEBUG_ROUTE"].flatMap(Route.init(rawValue:)) { self.route = route }
         if env["TT_DEBUG_DETAILS"] != nil { today.showsDetails = true }
+        if let mode = env["TT_DEBUG_PANEL"] {
+            panel.debugForce(mode)
+        }
         switch env["TT_DEBUG_OVERLAY"] {
         case "palette": overlay = .palette
         case "help": overlay = .help
@@ -167,6 +175,7 @@ final class AppState {
         today.reset()
         active.reset()
         quickAdd.hide()
+        panel.hide()
         overlay = nil
         phase = .loggedOut
     }

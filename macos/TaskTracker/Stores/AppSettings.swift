@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -16,6 +17,12 @@ final class AppSettings {
     var token: String? { didSet { defaults.set(token, forKey: "token") } }
     /// Ana pencere en son tam ekranda mıydı — açılışta aynı halde başlar.
     var startsFullScreen: Bool { didSet { defaults.set(startsFullScreen, forKey: "startsFullScreen") } }
+    /// Yüzen panel görünür mü (H / "Paneli göster-gizle" ile değişir).
+    var showsPanel: Bool { didSet { defaults.set(showsPanel, forKey: "showsPanel") } }
+    /// Yüzen panel penceresinin son konumu (sol alt köşe, ekran koordinatı).
+    var panelOrigin: NSPoint? {
+        didSet { defaults.set(panelOrigin.map { [$0.x, $0.y] }, forKey: "panelOrigin") }
+    }
     var showsMenuBarItem: Bool { didSet { defaults.set(showsMenuBarItem, forKey: "showsMenuBarItem") } }
     var appearance: Appearance {
         didSet {
@@ -30,6 +37,12 @@ final class AppSettings {
         token = defaults.string(forKey: "token")
         startsFullScreen = defaults.bool(forKey: "startsFullScreen")
         showsMenuBarItem = defaults.object(forKey: "showsMenuBarItem") as? Bool ?? true
+        showsPanel = defaults.object(forKey: "showsPanel") as? Bool ?? true
+        if let xy = defaults.array(forKey: "panelOrigin") as? [Double], xy.count == 2 {
+            panelOrigin = NSPoint(x: xy[0], y: xy[1])
+        } else {
+            panelOrigin = nil
+        }
         appearance = Appearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
     }
 

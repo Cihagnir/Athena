@@ -161,6 +161,8 @@ struct TaskRow: View {
     let projectName: String?
     let isSelected: Bool
     let isActive: Bool
+    /// Yüzen liste paneli için dar yerleşim: tek bir sağ etiket (tarih ya da proje), alan yok.
+    var compact = false
 
     private var statusGlyph: String {
         switch task.status {
@@ -178,7 +180,7 @@ struct TaskRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: compact ? 8 : 12) {
             Text(isActive ? "▸" : " ")
             Text(statusGlyph)
             Text(task.priority < 4 ? "!\(task.priority)" : "  ")
@@ -188,8 +190,16 @@ struct TaskRow: View {
                 Text(task.title).strikethrough(task.isDone).lineLimit(1)
                 if task.hasDetails { Text("≡").foregroundStyle(tone(Theme.ink2)) }
             }
-            Spacer(minLength: 12)
-            if !task.isDone {
+            Spacer(minLength: compact ? 4 : 12)
+            if !task.isDone && compact {
+                if task.scheduledDate < today {
+                    dateLabel(Day.short(task.scheduledDate), inverted: true)
+                } else if !task.dueDate.isEmpty {
+                    dateLabel("son " + Day.short(task.dueDate), inverted: task.dueDate <= today)
+                } else if let projectName {
+                    Text("#" + projectName).foregroundStyle(tone(Theme.ink2)).lineLimit(1)
+                }
+            } else if !task.isDone {
                 if !task.dueDate.isEmpty { dateLabel("son " + Day.short(task.dueDate), inverted: task.dueDate <= today) }
                 if let projectName { Text("#" + projectName).foregroundStyle(tone(Theme.ink2)).lineLimit(1) }
                 if let area = task.area { Text(area == .work ? "iş" : "kş").foregroundStyle(tone(Theme.ink2)) }
@@ -197,8 +207,8 @@ struct TaskRow: View {
             }
         }
         .foregroundStyle(tone(Theme.ink))
-        .padding(.horizontal, 32)
-        .padding(.vertical, 4)
+        .padding(.horizontal, compact ? 12 : 32)
+        .padding(.vertical, compact ? 3 : 4)
         .background(isSelected ? Theme.ink : Theme.paper)
         .contentShape(Rectangle())
     }

@@ -6,7 +6,7 @@ import SwiftUI
 /// bağlamı) ve Ayarlar'da görünür, global kısayol atanabilir olur.
 enum AppActions {
     static func all(for app: AppState) -> [AppAction] {
-        global(app) + mainWindow(app) + anyView(app) + todayList(app) + quickAddDocs
+        global(app) + mainWindow(app) + anyView(app) + todayList(app) + miniPanel(app) + listPanel(app) + quickAddDocs
     }
 
     private static func global(_ app: AppState) -> [AppAction] {
@@ -15,6 +15,20 @@ enum AppActions {
                       defaultGlobal: .init(.space, modifiers: [.control, .option])) { [weak app] in
                 guard let app, app.phase == .loggedIn else { app?.showMainWindow(); return }
                 app.quickAdd.toggle()
+            },
+            AppAction(id: "panel.listen", title: "Mini panel: klavyeyi ver / bırak", context: .global,
+                      defaultGlobal: .init(.m, modifiers: [.control, .option])) { [weak app] in
+                guard let app, app.phase == .loggedIn else { return }
+                app.panel.toggleListening(.mini)
+            },
+            AppAction(id: "panel.list", title: "Liste panelini aç / kapat", context: .global,
+                      defaultGlobal: .init(.l, modifiers: [.control, .option])) { [weak app] in
+                guard let app, app.phase == .loggedIn else { return }
+                app.panel.toggleListening(.list)
+            },
+            AppAction(id: "panel.visibility", title: "Yüzen paneli göster / gizle", context: .global) { [weak app] in
+                guard let app, app.phase == .loggedIn else { return }
+                app.panel.toggleVisibility()
             },
             AppAction(id: "mainWindow.show", title: "Ana pencereyi göster", context: .global,
                       defaultGlobal: .init(.t, modifiers: [.control, .option])) { [weak app] in
@@ -116,6 +130,36 @@ enum AppActions {
                       keys: [KeyBinding(key: .tab, display: "⇥")]) {
                 today.cycleArea()
             },
+        ]
+    }
+
+    private static func miniPanel(_ app: AppState) -> [AppAction] {
+        let panel = app.panel
+        return [
+            AppAction(id: "mini.expand", title: "Detayları genişlet / daralt", context: .miniPanel,
+                      keys: [KeyBinding(key: "e", display: "E")], showsInPalette: false) { panel.toggleExpanded() },
+            AppAction(id: "mini.timer", title: "Zamanlayıcı: dakika yaz + ↵ · çalışıyorsa durdur", context: .miniPanel,
+                      keys: [KeyBinding(key: "t", display: "T")], showsInPalette: false) { panel.timerKey() },
+            AppAction(id: "mini.done", title: "Aktif task'ı tamamla", context: .miniPanel,
+                      keys: [KeyBinding(key: "d", display: "D")]) { panel.completeActive() },
+            AppAction(id: "mini.pick", title: "Aktif task seç (liste paneli açılır)", context: .miniPanel,
+                      keys: [KeyBinding(key: .space, display: "␣")], showsInPalette: false) { panel.openList() },
+            AppAction(id: "mini.hide", title: "Paneli gizle", context: .miniPanel,
+                      keys: [KeyBinding(key: "h", display: "H")], showsInPalette: false) { panel.toggleVisibility() },
+            AppAction(id: "mini.escape", title: "Klavyeyi önceki uygulamaya geri ver", context: .miniPanel,
+                      keys: [KeyBinding(key: .escape, display: "esc")], showsInPalette: false) { panel.escape() },
+        ]
+    }
+
+    private static func listPanel(_ app: AppState) -> [AppAction] {
+        let panel = app.panel
+        return [
+            AppAction(id: "list.activate", title: "Aktif yap ve mini panele dön", context: .listPanel,
+                      keys: [KeyBinding(key: .return, display: "↵")], showsInPalette: false) { panel.activateSelected() },
+            AppAction(id: "list.pin", title: "Listeyi sabitle / bırak (pasif dashboard)", context: .listPanel,
+                      keys: [KeyBinding(key: "p", display: "P")], showsInPalette: false) { panel.togglePinned() },
+            AppAction(id: "list.escape", title: "Mini panele dön", context: .listPanel,
+                      keys: [KeyBinding(key: .escape, display: "esc")], showsInPalette: false) { panel.escape() },
         ]
     }
 

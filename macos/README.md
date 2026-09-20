@@ -6,7 +6,7 @@ task_tracker'ın macOS uygulaması: Swift 6 + SwiftUI (gerektiği yerde AppKit),
 - Görsel dil (her ekranın uyduğu kurallar): [../docs/DESIGN.md](../docs/DESIGN.md)
 - Yol haritası: [../docs/PLAN.md](../docs/PLAN.md) → Faz 2
 
-**Durum:** Faz 2 / adım 1–2 tamam — giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
+**Durum:** Faz 2 / adım 1–3 tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
 
 ---
 
@@ -32,6 +32,18 @@ open build/Build/Products/Debug/TaskTracker.app
 |---|---|---|
 | Her yerden | `⌃⌥Space` | Hızlı ekleme panelini aç / kapat |
 | Her yerden | `⌃⌥T` | Ana pencereyi göster |
+| Her yerden | `⌃⌥M` | Mini panel: klavyeyi ver / bırak (uygulama öne gelmez; çerçeve 2 px olur) |
+| Her yerden | `⌃⌥L` | Liste panelini aç / kapat (mini panelin yerinde açılır) |
+| Mini panel | `E` | Detayları genişlet / daralt (proje, alan, bitiş, açıklama) |
+| Mini panel | `T` | Zamanlayıcı: dakika yaz + `↵` başlatır; çalışıyorsa `T` durdurur |
+| Mini panel | `D` | Aktif task'ı tamamla → panel boşalır ("sıradaki ne?") |
+| Mini panel | `␣` | Aktif task seç → liste paneli açılır |
+| Mini panel | `H` | Paneli gizle (geri getirmek: `⌃⌥M` ya da palette "Yüzen paneli göster / gizle") |
+| Mini panel | `esc` | Klavyeyi önceki uygulamaya geri ver |
+| Liste paneli | `↵` | Seçili task'ı aktif yap, mini panele dön |
+| Liste paneli | `P` | Sabitle: klavyeyi bıraksa da liste açık kalır (pasif dashboard) |
+| Liste paneli | `esc` | Mini panele dön |
+| Liste paneli | `↑↓ J K D Y 1–4 ⇥` | Odak listesindeki anlamlarıyla aynı |
 | Ana pencere | `⌘1`…`⌘6` | Görünümler (şimdilik yalnızca ODAK dolu) |
 | Ana pencere | `⌘,` | Ayarlar |
 | Ana pencere | `⌘N` | Hızlı ekleme paneli |
@@ -50,6 +62,8 @@ open build/Build/Products/Debug/TaskTracker.app
 | Hızlı ekleme | `⇥` | Çok satırlı açıklama alanı ↔ başlık |
 | Hızlı ekleme | `⇧↵` | Açıklamada yeni satır |
 | Hızlı ekleme | `esc` | Kapat |
+
+**Yüzen panel:** giriş yapılınca ana ekranın sağ üstünde belirir; sürüklenir, konumu hatırlanır, her masaüstünde ve tam ekran uygulamaların üstünde durur. Pasifken tuşlara tepki vermez; `⌃⌥M` ya da üstüne tıklamak klavyeyi ona verir. Tek atımlık aksiyonlardan (`D`, süre başlatma, aktif task seçme) sonra klavye kendiliğinden önceki uygulamaya döner. Zamanlayıcı dolunca kısa ses + macOS bildirimi gelir (ilk zamanlayıcıda bildirim izni sorulur).
 
 **Pencere düğmeleri:** sol üstte `✕ – □` — kapat, küçült, tam ekran (sistemin renkli düğmelerinin monokrom karşılığı; her ekranda, giriş dahil). Tam ekrandayken `–` önce tam ekrandan çıkarır (macOS tam ekran pencereyi küçültemez).
 
@@ -90,9 +104,11 @@ TaskTracker/               uygulama hedefi
   Features/
     Login/ Main/ Today/ QuickAdd/ Settings/
     Overlays/              PaletteView (⌘K), HelpView (?) — ana pencerenin üstüne açılan katmanlar
+    Panel/                 PanelController (durum + pencere), PanelView (mini ve liste içerikleri)
     MenuBar/               MenuBarMenu — menü çubuğu öğesinin menüsü
   Support/
     LoginItem.swift        oturum açılışında başlama (SMAppService)
+    TimerAlert.swift       süre dolunca ses + bildirim
 project.yml                XcodeGen tanımı (hedef, bağımlılıklar, derleme ayarları)
 ```
 
@@ -120,6 +136,7 @@ Her aksiyon `Actions/AppActions.swift` içinde **bir kez** tanımlanır: `id`, g
 | `.mainWindow` | menü komutu (`TaskTrackerApp.commands`) — uygulama öndeyken her görünümde |
 | `.anyView` | `MainView.onKeyPress` — odaktaki görünümün işlemediği tuşlar buraya çıkar (`?`) |
 | `.todayList` | `TodayView.onKeyPress` → `ActionRegistry.handle` — liste odaktayken, modifier'sız |
+| `.miniPanel` / `.listPanel` | `PanelView.onKeyPress`; liste paneli önce kendi bağlamına, sonra `.todayList`'e bakar (aynı aksiyonlar iki yerde de çalışır) |
 | `.quickAdd` | metin alanı yakalar (`InkTextView`); kayıtta yalnızca belgelenir (`isBindable: false`) |
 
 Ayarlar'daki kısayol tablosu da aynı listeden çizilir ve **her aksiyonun bir global kısayol yuvası** vardır (`action.<id>` adıyla saklanır) — sık kullanılan bir aksiyonu kod değiştirmeden global'e terfi ettirebilirsin.
@@ -136,6 +153,17 @@ Ayarlar'daki kısayol tablosu da aynı listeden çizilir ve **her aksiyonun bir 
 ### Menü çubuğu ve otomatik başlama
 
 `TaskTrackerApp` içindeki `MenuBarExtra` sahnesi; etiketi `AppState.menuBarLabel`, görünürlüğü `AppSettings.showsMenuBarItem`. Oturum kurulumu (`bootstrap`) görünümden bağımsız olarak `AppState.init` içinde başlar — pencere hiç açılmasa da (login item) sayılar ve realtime çalışır. `LoginItem.launchedAtLogin` doğruysa `AppDelegate` açılışta pencereyi kapatır.
+
+### Yüzen panel
+
+Tek pencere (`FloatingPanel`), iki biçim: `PanelController.mode` = `.mini` ya da `.list`. Liste, mini panelin **yerini alır** — aynı köşede, aynı pencerede; ikisi aynı anda görünmez.
+
+- **Pencere:** çerçevesiz, `.nonactivatingPanel`, `.floating` seviye, tüm masaüstlerinde, gölgesiz. Sabit 320 × 560 ve saydamdır; içerik pencerenin üstüne ya da altına yaslanır (`anchorsTop` — içerik ekranın hangi yarısındaysa), kalan kısım tıklamaları geçirir. Böylece içerik büyüyüp küçülürken (mini ↔ geniş ↔ liste) pencere oynamaz ve içerik köşesinden büyür. Sürükleme bitince konum saklanır; içerik ekranın diğer yarısına geçtiyse yaslama çevrilir ve içerik yerinde kalsın diye pencere aynı anda kaydırılır (`panelMoved`).
+- **Dinleme durumu pencerenin anahtar (key) olmasından türer** (`didBecomeKey` / `didResignKey`); ayrı bir bayrak tutulmaz. Başka yere tıklamak = klavyeyi bırakmak: süre girişi ve geniş hal kapanır, sabitlenmemiş liste mini panele döner.
+- **`release()`** klavyeyi önceki uygulamaya verir: panel bir an `orderOut` edilip anahtar olmadan yeniden gösterilir (uygulama hiç öne gelmediği için odak kendiliğinden geri döner).
+- **Süre girişi** bir metin alanı değil, küçük bir durum makinesidir (`timerInput`, `handleTimerInput`): rakamlar, `⌫`, `↵`, `esc`. Panelde odaklanacak alt görünüm olmadığı için klavye odağı hiç kaybolmaz.
+- **Zamanlayıcı** sunucuda tıklamaz. `ActiveState.timerFraction(at:)` (Core) kalan oranı hesaplar; çubuk `TimelineView` ile saniyede bir yeniden çizilir ama görünüşü yalnızca bir hücre (1/37) değişince değişir → kademeli azalma. Bitişi `ActiveTaskStore.scheduleExpiry` bekler: ses + bildirim, ardından `stopTimer` (diğer istemciler de sıfırlansın). Uygulama kapalıyken dolmuş eski zamanlayıcı sessizce temizlenir.
+- Liste paneli `TodayStore`'u ana penceredeki Odak ekranıyla **paylaşır** (seçim dahil) ve `TaskRow(compact: true)` kullanır.
 
 ### Hızlı ekleme paneli
 
@@ -195,12 +223,12 @@ Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etme
 
 ```sh
 TT_DEBUG_ROUTE=settings \
-TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 \
+TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded \
 TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma !1 // kısa not" \
   build/Build/Products/Debug/TaskTracker.app/Contents/MacOS/TaskTracker
 ```
 
-(`TT_DEBUG_OVERLAY`: `palette` ya da `help`.)
+(`TT_DEBUG_OVERLAY`: `palette` | `help`. `TT_DEBUG_PANEL`: `listen` | `expanded` | `timer` | `list` — yüzen panelin halini klavye odağı olmadan zorlar. Not: uygulama terminalden arka planda başlatılıp pasifleşince gerçek klavye odağı düşer; panel halleri bu yüzden zorlanarak doğrulanır.)
 
 Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults delete local.tasktracker.mac`
 Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/Library/Saved\ Application\ State/local.tasktracker.mac.savedState`
@@ -226,7 +254,7 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 ## Sıradakiler (PLAN.md → Faz 2)
 
-- **Adım 3:** yüzen paneller — mini panel (6 hal) ve onun yerini alan liste paneli, zamanlayıcı çubuğu + süre dolunca ses/bildirim.
 - **Adım 4:** Triyaj → Hafta → Kanban → Projeler → Notlar.
+- Yüzen panelde eksik kalanlar: `N` ile task'a not düşme, liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
 - Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).
 - Bilinen boşluk: yarına ya da ileriye planlı task'lar Hafta görünümü gelene kadar hiçbir ekranda görünmez (Odak yalnızca bugün + gecikenleri gösterir).

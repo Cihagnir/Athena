@@ -85,6 +85,28 @@ public struct ActiveState: Sendable, Decodable {
 
     public let state: State
     public let task: TaskItem?
+
+    /// Zamanlayıcının biteceği an; zamanlayıcı yoksa `nil`. Server tıklamaz —
+    /// kalan süre istemcide `timer_started_at + timer_duration`'dan hesaplanır.
+    public var timerEnd: Date? {
+        guard state.timerDuration > 0, let start = PBDate.parse(state.timerStartedAt) else { return nil }
+        return start.addingTimeInterval(TimeInterval(state.timerDuration))
+    }
+
+    /// Kalan sürenin oranı (1 → 0); zamanlayıcı yoksa `nil`.
+    public func timerFraction(at now: Date) -> Double? {
+        guard let end = timerEnd else { return nil }
+        return min(max(end.timeIntervalSince(now) / Double(state.timerDuration), 0), 1)
+    }
+}
+
+/// PocketBase datetime metni: "2026-09-20 16:45:00.000Z" (UTC).
+public enum PBDate {
+    public static func parse(_ text: String) -> Date? {
+        guard !text.isEmpty else { return nil }
+        let iso = text.replacingOccurrences(of: " ", with: "T")
+        return try? Date(iso, strategy: .iso8601.year().month().day().time(includingFractionalSeconds: true).timeZone(separator: .omitted))
+    }
 }
 
 /// Hızlı ekleme parse sonucu (`/api/quickadd/preview` ve `/api/quickadd` → `parsed`).
