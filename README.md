@@ -27,16 +27,13 @@ docs/      plan, kararlar, tasarım, API sözleşmesi
 
 **Faz 0 (iskelet) ve Faz 1 (backend) tamamlandı.** Backend yerelde Docker'da çalışıyor; parser birim testleri 21/21, uçtan uca API testleri 15/15 (401 koruması, quickadd, görünümler, triyaj, aktif task + zamanlayıcı, SSE realtime). Tasarım teması belirlendi: [docs/DESIGN.md](docs/DESIGN.md). Sıradaki: **Faz 2 — macOS uygulaması.**
 
-### Devam etmeden önce (kullanıcı)
+### Ön koşullar — hepsi tamam
 
-- [ ] Xcode lisansını kabul et: `sudo xcodebuild -license accept` — kabul edilene kadar **`git` ve `swift` de çalışmıyor**, bu yüzden repo henüz `git init` edilmedi
-- [ ] `brew install xcodegen`
-- [ ] Doğrula: `git --version` ve `swift --version` hata vermemeli
+Xcode 27.0 (lisans kabul edildi) · Swift 6.4 · XcodeGen · git · Docker (colima). Repo `main` dalında, ilk commit atıldı.
 
-### Devam ederken ilk adımlar
+### Devam ederken ilk adım
 
-1. `git init` + ilk commit (`.gitignore` hazır; `backend/.env` repoya girmez)
-2. **Faz 2 / adım 1:** XcodeGen iskeleti → `Theme` (DESIGN.md belirteçleri) → API istemcisi + giriş → `ActionRegistry` → Odak ekranı + hızlı ekleme paneli (ilk kullanılabilir sürüm)
+**Faz 2 / adım 1:** XcodeGen iskeleti → `Theme` (DESIGN.md belirteçleri) → API istemcisi + giriş → `ActionRegistry` → Odak ekranı + hızlı ekleme paneli (ilk kullanılabilir sürüm)
 
 Ayrıntılar: [docs/PLAN.md](docs/PLAN.md) → "Uygulama adımları".
 
@@ -52,8 +49,8 @@ Giriş bilgileri `backend/.env` içinde (yerelde üretildi, repoya girmez).
 ### Ortam notları
 
 - **Sunucu:** `<sunucu>` — Tailscale SSH (`ssh <sunucu>`), IP `<ip>`. Docker sürümü / boş portları henüz **incelenmedi** (Faz 4).
-- **Bu Mac:** macOS 26 · Xcode 27.0 (lisans bekliyor) · Docker 29 (**colima**) + Compose 5.2 · Node 24 + pnpm 11 · Python 3.14 · Android Studio + SDK 37 · editör: Zed
-- **Kurulu olmayanlar:** XcodeGen, Rust, Flutter
+- **Bu Mac:** macOS 26 · Xcode 27.0 · Swift 6.4 · XcodeGen · Docker 29 (**colima**) + Compose 5.2 · Node 24 + pnpm 11 · Python 3.14 · Android Studio + SDK 37 · editör: Zed
+- **Kurulu olmayanlar:** Rust, Flutter
 - Todoist hesabı geçiş tamamlanana kadar **silinmeyecek**; import script'i Faz 4'te.
 
 ### Yeni oturumda Claude'a söylenecek

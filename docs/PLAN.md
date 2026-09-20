@@ -27,7 +27,7 @@ Todoist (ve genel olarak hazır araçlar) zamanla yetmiyor; hedef, **tamamen mod
 ### Ortam tespiti
 
 - `<sunucu>` 2026-09-20 akşamı itibarıyla **online** (Tailscale SSH: `ssh <sunucu>`); Docker sürümü ve boş portlar henüz incelenmedi. Geliştirme yine de yerelde, Mac'teki Docker ile başlar; deploy Faz 4'te.
-- **Xcode 27.0 kurulu**, ancak lisans henüz kabul edilmedi (`sudo xcodebuild -license accept`) — kabul edilene kadar `git` ve `swift` de çalışmıyor. XcodeGen kurulu değil (`brew install xcodegen`). İkisi de Mac fazının ön koşulu.
+- **Xcode 27.0** (lisans kabul edildi), Swift 6.4 ve XcodeGen kurulu — Mac fazının ön koşulları hazır.
 - Docker bu Mac'te **colima** ile çalışıyor (`colima start`).
 - Android Studio + SDK 37 kurulu. Node 24 + pnpm mevcut (parser testleri ve import script'i için).
 - Telefonun Tailscale'i 28 gündür kapalı → Android fazında erişim kararı verilecek (aşağıda).
