@@ -12,7 +12,7 @@ Gerekçeler: [DECISIONS.md](DECISIONS.md) madde 14.
 | Konum | `~/task-tracker/` (izin 700) → `backend/` (kod) · `data/` (veri) |
 | Container'lar | `task-tracker-pb` (PocketBase, `127.0.0.1:8091`) · `task-tracker-tunnel` (cloudflared) |
 | Adres | `https://tasks.example.com` — tünel `task-tracker` (`<TUNNEL-UUID>`), DNS kaydı CNAME |
-| Veri | **Henüz taşınmadı.** Sunucudaki veritabanı boş; gerçek veri Mac'teki yerel kurulumda. Taşıma: aşağıda. |
+| Veri | **Taşındı (2026-09-21).** Asıl veri artık sunucuda; Mac uygulaması `https://tasks.example.com`'a bağlı. Yereldeki PocketBase container'ı durduruldu (silinmedi) — yalnızca geliştirme/test için: `cd backend && docker compose start`. |
 
 Sunucuda başka projelere ait container'lar da çalışır (`balls_of_cerberus…` → 8090, `marketplace-distribution…` + Gitea → 8080). Onlara dokunulmaz; task_tracker bu yüzden **8091** portunu kullanır. Gitea'nın kendi tüneli (`git.example.com`) ayrıdır ve bu kurulumdan etkilenmez.
 
@@ -74,14 +74,17 @@ TT_URL=https://tasks.example.com TT_API_KEY=… TT_EMAIL=… TT_PASSWORD=… swi
 
 19 test; giriş tek kez yapılır (hız sınırlayıcı). Testler kendi kayıtlarını siler.
 
-## Veriyi taşımak (bir kez)
+## Veriyi taşımak (2026-09-21'de yapıldı)
+
+Yerelde yeniden veri birikirse ya da başka bir sunucuya geçilirse aynı betik kullanılır. **Dikkat:** betik sunucudaki veriyi yereldekiyle *değiştirir*; asıl veri sunucudayken çalıştırmak sunucudaki yeni kayıtları kenara alır (`data.before-…`).
+
 
 ```sh
 scripts/migrate-data.sh --dry-run    # arşivi üretir, sunucuya yollar, içeriğini listeler, siler
 scripts/migrate-data.sh              # gerçek taşıma
 ```
 
-Yerel PocketBase birkaç saniye durdurulur (tutarlı kopya), veri arşivlenip sunucuya gönderilir; sunucudaki mevcut veri silinmez, `~/task-tracker/data.before-<zaman>` olarak kenara alınır. **Kullanıcı kaydı da taşınır:** sunucuda giriş parolası yereldeki parola (`backend/.env` → `TT_USER_PASSWORD`) olur. API anahtarı ve yönetici (superuser) hesabı sunucunun `.env`'inden gelir, değişmez. Taşımadan sonra Mac uygulamasının adresini değiştir; yerel kurulum yedek olarak kalabilir.
+Yerel PocketBase birkaç saniye durdurulur (tutarlı kopya), veri arşivlenip sunucuya gönderilir. Arşiv önce ayrı bir klasöre açılır, yer değiştirme yalnızca açma başarılıysa yapılır; sunucudaki mevcut veri silinmez, `~/task-tracker/data.before-<zaman>` olarak kenara alınır. **Kullanıcı kaydı da taşınır:** sunucuda giriş parolası yereldeki parola (`backend/.env` → `TT_USER_PASSWORD`) olur. API anahtarı ve yönetici (superuser) hesabı sunucunun `.env`'inden gelir, değişmez. Taşımadan sonra Mac uygulamasının adresini değiştir; yerel kurulum yedek olarak kalabilir.
 
 ## Yedekler
 
@@ -92,6 +95,7 @@ Yerel PocketBase birkaç saniye durdurulur (tutarlı kopya), veri arşivlenip su
   rsync -az <sunucu>:task-tracker/data/backups/ ~/Backups/task-tracker/
   ```
 
+- Taşımadan kalan `~/task-tracker/data.before-*` klasörleri sorun çıkmadıysa silinebilir (ilki boş ilk kurulum, ikincisi taşınan verinin kopyası).
 - Geri yükleme: PocketBase'i durdur → zip'i boş bir `data/` klasörüne aç → başlat. (Ya da yönetim panelinden Backups → Restore.)
 
 ## Yönetim paneli

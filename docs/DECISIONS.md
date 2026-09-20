@@ -157,7 +157,7 @@ Tasarım önce tuvalde netleştirildi, sonra uygulandı. Kullanıcı kararları:
 | Veri | `PB_DATA` ile açık klasör (`~/task-tracker/data`) | İmajdan bağımsız; yedek/taşıma düz dosya işi. Yerelde adlandırılmış volume kalır. |
 | Kod aktarımı | `rsync` (`scripts/deploy.sh`) | Proje şimdilik yalnızca yerelde; kullanıcı kendi git'ine sonra push edecek. |
 | Port | 8091 | 8090 ve 8080 sunucuda başka projelerde. |
-| Veri taşıma | Hazır ama **yapılmadı** (`scripts/migrate-data.sh`) | Kullanıcı önce Mac uygulamasını bir hafta yerelde kullanıp iyileştirecek. |
+| Veri taşıma | `scripts/migrate-data.sh` ile **aynı gün yapıldı** | Kullanıcı bir haftalık denemeyi doğrudan sunucu üzerinde yapmayı seçti. İlk çalıştırmada betikte hata çıktı (`docker run`'da `-i` eksikti, arşiv container'a girmedi); veri kaybı olmadı, betik "önce ayrı klasöre aç, sonra yer değiştir" sırasına çevrildi ve yeniden uçtan uca doğrulandı. |
 
 **Elenenler:** `tailscale serve` (Tailscale sürekli açık olmalı) · Cloudflare Access (daha sıkı ama panel kurulumu ister; ileride önüne eklenebilir) · mevcut Gitea tüneline kural eklemek (çalışan tüneli yeniden başlatmak gerekirdi).
 

@@ -26,11 +26,17 @@ if [ "${1:-}" = "--dry-run" ]; then
     exit 0
 fi
 
+# Önce ayrı bir klasöre açılır; yer değiştirme yalnızca açma başarılıysa yapılır — yarıda
+# kesilirse sunucu eski verisiyle kalır. `docker run -i`: arşiv container'a stdin'den girer.
 ssh "$HOST" "set -e; cd ~/$DIR/backend
+    docker run --rm -i -v ~/$DIR:/t alpine sh -c 'rm -rf /t/data.incoming && mkdir /t/data.incoming && tar -C /t/data.incoming -xzf - && test -s /t/data.incoming/data.db' < $ARCHIVE
     docker compose stop pocketbase >/dev/null
-    docker run --rm -v ~/$DIR:/t alpine sh -c 'mv /t/data /t/data.before-$STAMP && mkdir /t/data && tar -C /t/data -xzf - ' < $ARCHIVE
+    docker run --rm -v ~/$DIR:/t alpine sh -c 'mv /t/data /t/data.before-$STAMP && mv /t/data.incoming /t/data'
     rm -f $ARCHIVE
     PROFILE=''; test -f tunnel/config.yml && PROFILE='--profile tunnel'
     docker compose \$PROFILE up -d >/dev/null
+    PORT=\$(grep -E '^PB_PORT=' .env | cut -d= -f2)
+    for i in \$(seq 1 30); do curl -fs http://127.0.0.1:\${PORT:-8090}/api/health >/dev/null && break; sleep 1; done
+    curl -fs http://127.0.0.1:\${PORT:-8090}/api/health >/dev/null || { echo 'sunucu ayağa kalkmadı'; docker compose logs --tail 20; exit 1; }
     echo 'taşındı — eski veri: ~/$DIR/data.before-$STAMP (sorun yoksa silinebilir)'"
 rm -f "$ARCHIVE"
