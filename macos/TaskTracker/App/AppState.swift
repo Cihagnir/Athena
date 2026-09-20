@@ -42,6 +42,8 @@ final class AppState {
     var route: Route = .today
     /// Kök görünüm açılışta doldurur; pencere kapalıyken yeniden açmak için.
     var openMainWindow: () -> Void = {}
+    /// `WindowConfigurator` doldurur (tam ekran gibi pencere düzeyi işler için).
+    @ObservationIgnored weak var mainWindow: NSWindow?
 
     private var realtimeTask: Task<Void, Never>?
 
@@ -186,6 +188,11 @@ final class AppState {
     }
 
     // MARK: Pencere
+
+    func toggleFullScreen() {
+        showMainWindow()
+        mainWindow?.toggleFullScreen(nil)
+    }
 
     func showMainWindow(route: Route? = nil) {
         if let route { self.route = route }

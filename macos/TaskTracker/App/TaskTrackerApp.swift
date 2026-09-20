@@ -22,6 +22,8 @@ struct TaskTrackerApp: App {
             CommandGroup(replacing: .newItem) { menuItems(ids: ["task.new"]) }
             CommandMenu("Görünüm") {
                 menuItems(ids: Route.views.map { "route.\($0.rawValue)" })
+                Divider()
+                menuItems(ids: ["window.fullScreen"])
             }
         }
     }

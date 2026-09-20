@@ -35,6 +35,7 @@ open build/Build/Products/Debug/TaskTracker.app
 | Ana pencere | `⌘1`…`⌘6` | Görünümler (şimdilik yalnızca ODAK dolu) |
 | Ana pencere | `⌘,` | Ayarlar |
 | Ana pencere | `⌘N` | Hızlı ekleme paneli |
+| Ana pencere | `⌃⌘F` | Tam ekran aç / kapat (durum hatırlanır; bir sonraki açılış aynı halde başlar) |
 | Odak listesi | `↑` `↓` / `J` `K` | Gezin |
 | Odak listesi | `↵` | Aktif task yap / bırak (`▸`) |
 | Odak listesi | `D` | Tamamla / geri al |
@@ -186,7 +187,8 @@ Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults
 | Pencere köşeleri yuvarlak | **sapma** | macOS başlıklı pencerelerde köşeyi sistem çizer. Kare köşe için ana pencereyi de çerçevesiz `NSWindow`'a çevirmek gerekir (boyutlandırma/taşıma elle yazılır) — ertelendi. Hızlı ekleme paneli çerçevesiz olduğu için kare. |
 | Blok imleç `█` yok | **sapma** | `NSTextView`'ın ekleme imleci artık sistem bileşeni; özelleştirmek kırılgan. İmleç `ink` renginde ince çizgi. |
 | Kısayol kaydedici kutusu | **sapma** | `KeyboardShortcuts.Recorder` paketin kendi (yuvarlak, İngilizce "Record Shortcut") bileşeni. Tema içi bir kaydedici adım 2'de yazılabilir. |
-| Pencere düğmeleri gizli | karar | Renkli trafik ışıkları monokromu bozuyor. `⌘W` / `⌘M` / `⌘Q` çalışır; pencere arka plandan sürüklenir. |
+| Pencere düğmeleri gizli | karar | Renkli trafik ışıkları monokromu bozuyor. `⌘W` / `⌘M` / `⌘Q` / `⌃⌘F` çalışır; pencere arka plandan sürüklenir. |
+| Tam ekran geçiş animasyonu | sistem | macOS'in kendi tam ekranı (ayrı masaüstü) kullanılıyor; geçiş animasyonu sisteme ait, "hareket yok" ilkesinin dışında kalıyor. |
 | Kaydırma çubuğu | sistem | Görünürlüğü macOS ayarına bağlı. |
 
 ## Sıradakiler (PLAN.md → Faz 2)

@@ -35,6 +35,10 @@ enum AppActions {
                       keys: [KeyBinding(key: ",", modifiers: .command, display: "⌘,")]) { [weak app] in
                 app?.showMainWindow(route: .settings)
             },
+            AppAction(id: "window.fullScreen", title: "Tam ekran aç / kapat", context: .mainWindow,
+                      keys: [KeyBinding(key: "f", modifiers: [.control, .command], display: "⌃⌘F")]) { [weak app] in
+                app?.toggleFullScreen()
+            },
             AppAction(id: "task.new", title: "Yeni task (hızlı ekleme paneli)", context: .mainWindow,
                       keys: [KeyBinding(key: "n", modifiers: .command, display: "⌘N")]) { [weak app] in
                 app?.quickAdd.show()

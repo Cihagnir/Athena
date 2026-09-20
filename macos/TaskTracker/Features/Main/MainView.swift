@@ -20,7 +20,7 @@ struct RootView: View {
         .foregroundStyle(Theme.ink)
         .background(Theme.paper)
         .overlay(Rectangle().strokeBorder(Theme.ink, lineWidth: Theme.hairline))
-        .background(WindowConfigurator())
+        .background(WindowConfigurator(app: app))
         .ignoresSafeArea()
         .task {
             app.openMainWindow = { openWindow(id: TaskTrackerApp.mainWindowID) }
@@ -97,13 +97,33 @@ private struct Sidebar: View {
     }
 }
 
-/// E-ink penceresi: başlık çubuğu ve renkli pencere düğmeleri yok (⌘W / ⌘M / ⌘Q
-/// çalışır), pencere arka plandan sürüklenir.
+/// E-ink penceresi: başlık çubuğu ve renkli pencere düğmeleri yok (⌘W / ⌘M / ⌘Q /
+/// ⌃⌘F çalışır), pencere arka plandan sürüklenir. Tam ekran durumu hatırlanır.
 private struct WindowConfigurator: NSViewRepresentable {
+    let app: AppState
+
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
         DispatchQueue.main.async {
             guard let window = view.window else { return }
+            app.mainWindow = window
+            window.collectionBehavior.insert(.fullScreenPrimary)
+            let settings = app.settings
+            let center = NotificationCenter.default
+            center.addObserver(forName: NSWindow.didEnterFullScreenNotification, object: window, queue: .main) { _ in
+                MainActor.assumeIsolated { settings.startsFullScreen = true }
+            }
+            center.addObserver(forName: NSWindow.didExitFullScreenNotification, object: window, queue: .main) { _ in
+                MainActor.assumeIsolated { settings.startsFullScreen = false }
+            }
+            // macOS pencere durumunu her çıkışta geri yüklemez (⌘Q ile çıkışta sistem ayarına
+            // bağlı); bu yüzden tam ekran durumu ayrıca saklanır. Pencere ekrana yerleşmeden
+            // istenen geçiş yok sayıldığı için kısa bir gecikmeyle uygulanır.
+            if settings.startsFullScreen {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    if !window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil) }
+                }
+            }
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
             window.isMovableByWindowBackground = true
