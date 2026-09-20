@@ -33,20 +33,25 @@ Sözdizimi — token'lar satırın herhangi bir yerinde, boşlukla ayrılmış; 
 
 | Token | Anlam |
 |---|---|
-| `bugün` `yarın` | planlanan gün |
+| `bugün` `yarın` | **başlama günü** (`scheduled_date`): task o gün Odak'a düşer |
 | `pzt` `sal` `çar` `per` `cum` `cmt` `paz` (+ uzun adları) | bir sonraki o gün; bugünün adı yazılırsa haftaya |
 | `25.09` `25/09` `25.09.2027` | yılsız ve geçmişte kalan tarih gelecek yıla yuvarlanır; geçersiz tarih (`31.02`) token sayılmaz |
+| `son:cuma` `son:yarın` `son:25.09` | **bitiş / son tarih** (`due_date`): `son:` + yukarıdaki tarih biçimlerinden herhangi biri. Başlama gününden bağımsızdır; çözülemeyen (`son:31.02`) başlıkta kalır |
 | `!1` … `!4` | öncelik (1 en yüksek; varsayılan 4) |
 | `#proje` | ada göre eşleşir: büyük/küçük harf ve Türkçe karakter duyarsız, boşluk yerine `-`, **tekil önek** yeterli (`#fin` → Finans). Bitmiş projeler eşleşmez. |
 | `@iş` `@kişisel` | alan; verilmezse projenin alanı miras alınır |
+| `// …` | tek başına duran ilk `//`'den sonrası **açıklama**dır; parse edilmez (içinde `yarın`, `#x` geçebilir). `https://…` içindeki `//` ayraç sayılmaz |
 | `"…"` / `“…”` | tüm satır tırnak içindeyse parse kapalı, içerik aynen başlık olur |
 
 ASCII yazımlar da geçerli (`bugun`, `yarin`, `sali`, `@is`, `@kisisel`).
 
+Tarih çözümü **deterministik**tir (sözlük + takvim aritmetiği, `backend/pb_hooks/lib/parser.js`); aynı girdi aynı gün içinde hep aynı sonucu verir.
+
 Kurallar:
 - **Tarihsiz + projesiz** → `scheduled_date = bugün` (geçici günlük task). **Projeli + tarihsiz** → `scheduled_date` boş (proje birikimi).
+- `son:` başlama günü vermez: `Rapor son:cuma` (projesiz) → başlama bugün, bitiş cuma. Bitiş başlamadan önceyse task yine oluşur, `warnings: ["due_before_scheduled"]` döner.
 - Eşleşmeyen/belirsiz `#proje` **girdiyi kaybettirmez**: task yine oluşur, `#…` başlıkta kalır, `warnings: ["project_not_found"]` döner.
-- Başlık boş kalıyorsa (`yarın !1`) → `400`. Metin en fazla 500 karakter.
+- Başlık boş kalıyorsa (`yarın !1`, `// yalnızca açıklama`) → `400`. `text` en fazla 500 karakter (`//` kısmı dahil); uzun açıklama `description` alanıyla gönderilir.
 
 ### `POST /api/quickadd/preview`
 
@@ -64,9 +69,11 @@ curl -s -X POST $PB/api/quickadd/preview -H "Authorization: $TOKEN" \
   "valid": true,
   "title": "Faturayı öde",
   "scheduled_date": "2026-09-21",
+  "due_date": null,
   "priority": 1,
   "project": { "id": "…", "name": "Finans", "area": "personal" },
   "area": "personal",
+  "description": null,
   "tokens": [
     { "type": "date", "raw": "yarın", "start": 13, "end": 18, "value": "2026-09-21" },
     { "type": "priority", "raw": "!1", "start": 19, "end": 21, "value": 1 },
@@ -78,14 +85,18 @@ curl -s -X POST $PB/api/quickadd/preview -H "Authorization: $TOKEN" \
 ```
 
 - `tokens[].start/end`: özgün metindeki **UTF-16** ofsetleri (Swift'te `String.utf16` / `NSRange`, Kotlin'de doğrudan `String` indeksi). Vurgulama bunlarla yapılır.
+- Token türleri: `date` · `due` · `priority` · `project` · `area` · `description` (`//`'den satır sonuna; `value` = açıklama metni, her zaman son token).
 - Çözülemeyen proje token'ında `value: null`.
 - `valid: false` → Enter'a basılırsa quickadd `400` dönecek demektir.
 
 ### `POST /api/quickadd`
 
+Gövde: `{ "text": "…", "description": "…" }`. `description` opsiyoneldir: paneldeki çok satırlı açıklama alanı buradan gelir (markdown, parse edilmez). Satırda `// …` de varsa ikisi alt alta birleştirilir (önce satırdaki), hiçbiri kaybolmaz.
+
 ```sh
 curl -s -X POST $PB/api/quickadd -H "Authorization: $TOKEN" \
-  -H 'Content-Type: application/json' -d '{"text":"Süt al"}'
+  -H 'Content-Type: application/json' \
+  -d '{"text":"Teklifi gönder salı son:cuma !1 // fiyat tablosunu ekle"}'
 ```
 
 → `{ "task": <task kaydı>, "parsed": <preview ile aynı yapı> }`

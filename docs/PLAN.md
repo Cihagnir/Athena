@@ -63,7 +63,7 @@ PocketBase'in resmî SDK'ları JS ve Dart; Swift/Kotlin için resmî SDK yok. RE
 | Koleksiyon | Alanlar |
 |---|---|
 | `projects` | `name`, `area` (`work`/`personal`), `status` (`active`/`on_hold`/`done`), `description` — renk alanı yok (saf monokrom) |
-| `tasks` | `title`, `notes` (markdown), `area`, `project?` → projects, `status` (todo/doing/blocked/done), `priority` (1–4), `scheduled_date?`, `due_date?` (saat dilimsiz `YYYY-MM-DD` metni), `sort_order`, `completed_at?`, `note?` → notes |
+| `tasks` | `title`, `description` (markdown, opsiyonel), `area`, `project?` → projects, `status` (todo/doing/blocked/done), `priority` (1–4), `scheduled_date?`, `due_date?` (saat dilimsiz `YYYY-MM-DD` metni), `sort_order`, `completed_at?`, `note?` → notes |
 | `notes` | `title`, `body` (markdown), `project?` → projects, `tags[]`, `pinned` |
 | `focus_state` | tek kayıt: `current_task?` → tasks, `timer_started_at?`, `timer_duration?` (aktif task + zamanlayıcı; tüm istemcilerde ortak) |
 
@@ -84,7 +84,7 @@ PocketBase'in resmî SDK'ları JS ve Dart; Swift/Kotlin için resmî SDK yok. RE
 | **Projeler** | Açık task sayısı + ilerleme; detayda task'lar ve notlar. |
 | **Notlar** | Liste + markdown editör; proje/etiket filtresi; sabitleme. |
 
-**Hızlı ekleme sözdizimi** (Türkçe destekli): `Faturayı öde yarın !1 #finans @kişisel` — `bugün/yarın/pzt…`, `!1–4`, `#proje`, `@iş/@kişisel`; tüm satır tırnak içindeyse parse kapalı.
+**Hızlı ekleme sözdizimi** (Türkçe destekli): `Faturayı öde yarın son:cuma !1 #finans @kişisel // IBAN gelen kutusunda` — `bugün/yarın/pzt…` (başlama), `son:<tarih>` (bitiş), `!1–4`, `#proje`, `@iş/@kişisel`, `// açıklama`; tüm satır tırnak içindeyse parse kapalı. Ayrıntı: [api.md](api.md).
 
 ---
 
@@ -132,6 +132,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 **Hızlı ekleme paneli**
 - Global hotkey ile her yerden açılır, canlı parse önizlemesi gösterir.
 - **Enter = ekle, kutu açık kalır** (arka arkaya giriş); **Esc = kapat**.
+- **Tab = çok satırlı açıklama alanı** (opsiyonel); kısa notlar satır içinde `// …` ile.
 
 **Aktif task + zamanlayıcı**
 - Aktif task **elle seçilir**; tamamlanınca mini panel **boş kalır** ("sıradaki ne?"), otomatik atama yok.
@@ -183,7 +184,7 @@ Faz 2 ve 3 yalnızca `docs/api.md`'ye bağımlı; sıraları değiştirilebilir 
 
 ## Doğrulama
 
-- **Backend** *(✅ `pnpm test` 21/21, `pnpm test:api` 15/15)*: `docker compose up` → admin UI açılıyor, koleksiyonlar migration'dan oluşmuş. Parser testleri geçiyor. `docs/api.md`'deki her `curl` örneği beklenen yanıtı veriyor; giriş yapılmadan tüm endpoint'ler `401/403` dönüyor.
+- **Backend** *(✅ `pnpm test` 30/30, `pnpm test:api` 16/16)*: `docker compose up` → admin UI açılıyor, koleksiyonlar migration'dan oluşmuş. Parser testleri geçiyor. `docs/api.md`'deki her `curl` örneği beklenen yanıtı veriyor; giriş yapılmadan tüm endpoint'ler `401/403` dönüyor.
 - **Realtime:** `curl` ile eklenen task, açık uygulamadaki Odak/Dashboard'da yenilemeden beliriyor.
 - **macOS:** global hotkey başka bir uygulama öndeyken paneli açıyor; satır yazıp Enter → task oluşuyor; dashboard paneli tam ekran olmayan tüm pencerelerin üstünde kalıyor.
 - **Android:** dashboard modunda ekran kapanmıyor; widget güncel odak listesini gösteriyor; Mac'ten eklenen task telefonda saniyeler içinde görünüyor.

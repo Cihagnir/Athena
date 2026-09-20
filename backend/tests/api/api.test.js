@@ -115,6 +115,24 @@ test("quickadd: bilinmeyen proje girdiyi kaybetmez", async () => {
     assert.deepEqual(parsed.warnings, ["project_not_found"])
 })
 
+test("quickadd: son: → due_date, // → description, gövdedeki description eklenir", async () => {
+    const today = localToday()
+    const a = await quickadd("zz-test teklif yarın son:" + addDays(today, 5).split("-").reverse().join(".") + " // fiyat tablosunu ekle")
+    assert.equal(a.task.title, "zz-test teklif")
+    assert.equal(a.task.scheduled_date, addDays(today, 1))
+    assert.equal(a.task.due_date, addDays(today, 5))
+    assert.equal(a.task.description, "fiyat tablosunu ekle")
+
+    const r = await api("POST", "/api/quickadd", { text: "zz-test çok satır // kısa not", description: "1. satır\n2. satır" })
+    created.tasks.push(r.body.task.id)
+    assert.equal(r.body.task.description, "kısa not\n\n1. satır\n2. satır")
+    assert.equal(r.body.task.due_date, "")
+
+    const c = await quickadd("zz-test yalnız bitiş son:yarın")
+    assert.equal(c.task.due_date, addDays(today, 1))
+    assert.equal(c.task.scheduled_date, today, "projesiz + başlangıçsız → bugün")
+})
+
 test("quickadd: boş başlık 400", async () => {
     assert.equal((await api("POST", "/api/quickadd", { text: "yarın !1" })).status, 400)
     assert.equal((await api("POST", "/api/quickadd", {})).status, 400)

@@ -20,13 +20,13 @@ Renk alanı **yok** — arayüz saf monokrom ([DESIGN.md](DESIGN.md)).
 | Alan | Tip | Not |
 |---|---|---|
 | `title` | text, zorunlu | |
-| `notes` | text (markdown) | task'a düşülen not |
+| `description` | text (markdown), opsiyonel | task'ın açıklaması/detayı; hızlı eklemede `// …` ya da `description` gövde alanı |
 | `area` | `work` \| `personal`, opsiyonel | boşsa alan filtreli listelerde çıkmaz |
 | `project` | → `projects`, opsiyonel | |
 | `status` | `todo` \| `doing` \| `blocked` \| `done`, zorunlu | kanban sütunları |
 | `priority` | 1–4 tam sayı, zorunlu | 1 en yüksek |
-| `scheduled_date` | `YYYY-MM-DD` metni ya da boş | ne zaman **yapılacak**; Odak/Hafta bunu kullanır |
-| `due_date` | `YYYY-MM-DD` metni ya da boş | son tarih; hızlı eklemede sözdizimi henüz yok |
+| `scheduled_date` | `YYYY-MM-DD` metni ya da boş | ne zaman **başlanacak/yapılacak**; Odak, Triyaj ve Hafta bunu kullanır |
+| `due_date` | `YYYY-MM-DD` metni ya da boş | ne zamana kadar **bitmeli**; hızlı eklemede `son:cuma`. Listeleri süzmez, yalnızca gösterilir/uyarır |
 | `sort_order` | number | küçükten büyüğe |
 | `completed_at` | datetime | server yönetir (`status` ile birlikte) |
 | `note` | → `notes`, opsiyonel | gevşek bağ; not ekranı geri-bağlantıları `filter=note="ID"` ile listeler |

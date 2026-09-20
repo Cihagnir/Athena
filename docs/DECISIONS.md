@@ -105,7 +105,15 @@ Planlama oturumunda (2026-09-20) alınan kararlar, gerekçeleri ve elenen altern
 | `focus_state` | REST'ten salt-okunur; yalnızca `/api/focus/*` yazar | Tutarlılık kuralları (task değişince zamanlayıcı sıfırlanır vb.) tek yerde. |
 | Zamanlayıcı süresi | Saniye cinsinden saklanır; server tıklamaz | İstemci `started_at + duration`'dan hesaplar; dakika girişi istemcinin işi. |
 
-**Kapsam dışı bırakılan:** `due_date` için hızlı ekleme sözdizimi (alan şemada var, REST ile yazılabilir); gerçek kullanımda ihtiyaç çıkarsa eklenir.
+## 11. Task açıklaması ve bitiş tarihi hızlı eklemede *(2026-09-20)*
+
+**Karar:** Task = başlık + opsiyonel açıklama. Hızlı eklemede açıklamanın iki yolu var: satır içinde `// …` (parser, server'da) ve panelde `Tab` ile açılan çok satırlı alan (`description` gövde alanı). Bitiş tarihi için `son:<tarih>` token'ı eklendi → bir task'ın hem **ne zaman başlanacağı** (`scheduled_date`) hem **ne zamana bitmesi gerektiği** (`due_date`) tek satırda yazılabiliyor. `tasks.notes` → `tasks.description` olarak yeniden adlandırıldı.
+
+**Gerekçe:** Kullanıcı isteği — tasarım incelemesinde hızlı eklemeden detay yazılamadığı fark edildi. `//` tek satırlık akışı (`curl`, Shortcuts, Android) bozmadan çalışır; `Tab` alanı çok satırlı yazı için. İkisi birlikte gelirse birleştirilir, girdi kaybolmaz. Eski `notes` adı hem `notes` koleksiyonuyla hem `tasks.note` ilişkisiyle karışıyordu.
+
+**Tarih çözümü deterministik kalır** (sözlük + takvim aritmetiği), AI yok: her tuş vuruşunda çalışan önizleme için hız, öngörülebilirlik ve dışa bağımsızlık gerekiyor. Yeni kalıplar (`haftaya salı`, `3 gün sonra`…) ihtiyaç çıktıkça sözlüğe + teste eklenir.
+
+**Elenenler:** yalnızca `Tab` alanı (tek satırlık istemciler açıklama ekleyemezdi) · yalnızca `//` (çok satır yazılamaz) · ayrı "özet" ve "detay" alanları (tek markdown alanı yeterli; kalıcı uzun içerik için Notlar + `tasks.note` bağı var).
 
 ## Ertelenen kararlar
 

@@ -166,3 +166,76 @@ test("matchProject doğrudan", () => {
     assert.equal(matchProject("e", PROJECTS), null)
     assert.equal(matchProject("", PROJECTS), null)
 })
+
+test("son: → due_date; scheduled_date'ten bağımsız", () => {
+    const r = p("Raporu yaz salı son:cuma")
+    assert.equal(r.title, "Raporu yaz")
+    assert.equal(r.scheduled_date, "2026-09-29")
+    assert.equal(r.due_date, "2026-09-25")
+    assert.deepEqual(r.tokens.map((t) => t.type), ["date", "due"])
+})
+
+test("son: tüm tarih biçimlerini kabul eder; büyük harf ve sıra serbest", () => {
+    assert.equal(p("x son:yarın").due_date, "2026-09-24")
+    assert.equal(p("x son:bugun").due_date, "2026-09-23")
+    assert.equal(p("x SON:25.09").due_date, "2026-09-25")
+    assert.equal(p("x son:1.10.2027").due_date, "2027-10-01")
+    const r = p("son:cuma x yarın")
+    assert.equal(r.due_date, "2026-09-25")
+    assert.equal(r.scheduled_date, "2026-09-24")
+    assert.equal(r.title, "x")
+})
+
+test("son: tek başına başlama tarihi vermez", () => {
+    const r = p("x son:cuma")
+    assert.equal(r.scheduled_date, null)
+    assert.equal(r.due_date, "2026-09-25")
+})
+
+test("geçersiz son: başlıkta kalır", () => {
+    for (const raw of ["son:", "son:31.02", "son:birgün"]) {
+        const r = p("x " + raw)
+        assert.equal(r.due_date, null)
+        assert.equal(r.title, "x " + raw)
+    }
+})
+
+test("bitiş başlangıçtan önceyse uyarı", () => {
+    const r = p("x cuma son:yarın")
+    assert.deepEqual(r.warnings, ["due_before_scheduled"])
+    assert.deepEqual(p("x yarın son:yarın").warnings, [])
+})
+
+test("// sonrası açıklamadır ve parse edilmez", () => {
+    const text = "Faturayı öde yarın !1 // IBAN gelen kutusunda, yarın !2 #finans"
+    const r = p(text)
+    assert.equal(r.title, "Faturayı öde")
+    assert.equal(r.description, "IBAN gelen kutusunda, yarın !2 #finans")
+    assert.equal(r.priority, 1)
+    assert.equal(r.project, null)
+    const d = r.tokens.find((t) => t.type === "description")
+    assert.equal(text.slice(d.start, d.end), "// IBAN gelen kutusunda, yarın !2 #finans")
+    assert.deepEqual(r.tokens.map((t) => t.type), ["date", "priority", "description"])
+})
+
+test("// yalnızca tek başına kelimeyken ayraçtır", () => {
+    const r = p("Oku https://example.com/a//b yarın")
+    assert.equal(r.description, null)
+    assert.equal(r.title, "Oku https://example.com/a//b")
+    assert.equal(p("x //").description, null)
+    assert.equal(p("x //").title, "x")
+    assert.equal(p("x // a // b").description, "a // b")
+})
+
+test("açıklama var ama başlık yoksa geçersiz; tırnaklı satırda // düz metin", () => {
+    assert.equal(p("// yalnızca açıklama").valid, false)
+    const r = p('"a // b"')
+    assert.equal(r.title, "a // b")
+    assert.equal(r.description, null)
+})
+
+test("token'sız satırda yeni alanlar null", () => {
+    const r = p("Süt al")
+    assert.equal(r.due_date, null)
+    assert.equal(r.description, null)
+})

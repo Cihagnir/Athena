@@ -1,9 +1,10 @@
 // Hızlı ekleme parser'ı. Saf fonksiyon: DB'ye ve saate dokunmaz, hem PocketBase
 // JSVM'inde hem Node'da (tests/unit) çalışır.
 //
-//   parse("Faturayı öde yarın !1 #finans @kişisel", { today, projects })
+//   parse("Faturayı öde yarın son:cuma !1 #finans @kişisel // IBAN gelen kutusunda", { today, projects })
 //
 // Her token türünden yalnızca ilki tüketilir; tanınmayan her şey başlıkta kalır.
+// Tek başına duran ilk "//" kelimesinden sonrası açıklamadır ve parse edilmez.
 
 const dates = require("./dates.js")
 
@@ -20,6 +21,8 @@ const WEEKDAYS = {
 }
 
 const AREAS = { is: "work", kisisel: "personal" }
+
+const DUE_PREFIX = "son:"
 
 const QUOTES = [['"', '"'], ["“", "”"]]
 
@@ -93,9 +96,11 @@ function parse(text, options) {
         valid: false,
         title: "",
         scheduled_date: null,
+        due_date: null,
         priority: null,
         project: null,
         area: null,
+        description: null,
         tokens: [],
         warnings: [],
     }
@@ -111,12 +116,31 @@ function parse(text, options) {
     const titleWords = []
     const seen = {}
     const re = /\S+/g
+    let descriptionToken = null
     let m
     while ((m = re.exec(text)) !== null) {
         const word = m[0]
         const token = { type: null, raw: word, start: m.index, end: m.index + word.length, value: null }
 
-        if (!seen.priority && /^![1-4]$/.test(word)) {
+        if (word === "//") {
+            const rest = text.slice(token.end).trim()
+            if (rest) {
+                const end = text.replace(/\s+$/, "").length
+                descriptionToken = { type: "description", raw: text.slice(token.start, end), start: token.start, end: end, value: rest }
+                result.description = rest
+            }
+            break
+        }
+
+        const dueDate = !seen.due && fold(word.slice(0, DUE_PREFIX.length)) === DUE_PREFIX
+            ? parseDate(word.slice(DUE_PREFIX.length), today)
+            : null
+
+        if (dueDate) {
+            token.type = "due"
+            token.value = dueDate
+            result.due_date = dueDate
+        } else if (!seen.priority && /^![1-4]$/.test(word)) {
             token.type = "priority"
             token.value = +word[1]
             result.priority = token.value
@@ -146,6 +170,10 @@ function parse(text, options) {
         }
     }
 
+    if (descriptionToken) result.tokens.push(descriptionToken)
+    if (result.scheduled_date && result.due_date && result.due_date < result.scheduled_date) {
+        result.warnings.push("due_before_scheduled")
+    }
     if (!result.area && result.project && result.project.area) result.area = result.project.area
     result.title = titleWords.join(" ")
     result.valid = result.title.length > 0

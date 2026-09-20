@@ -9,7 +9,7 @@ routerAdd("POST", "/api/quickadd/preview", (e) => {
     return e.json(200, parser.parse(text, { today: dates.today(), projects: store.projectIndex() }))
 }, $apis.requireAuth("users"))
 
-// POST /api/quickadd  { text } → { task, parsed }
+// POST /api/quickadd  { text, description? } → { task, parsed }
 routerAdd("POST", "/api/quickadd", (e) => {
     const parser = require(`${__hooks}/lib/parser.js`)
     const dates = require(`${__hooks}/lib/dates.js`)
@@ -29,6 +29,11 @@ routerAdd("POST", "/api/quickadd", (e) => {
     task.set("project", parsed.project ? parsed.project.id : "")
     // Tarihsiz + projesiz = geçici günlük task → bugüne. Projeli ve tarihsiz → proje birikimi.
     task.set("scheduled_date", parsed.scheduled_date || (parsed.project ? "" : today))
+    task.set("due_date", parsed.due_date || "")
+    // Açıklama iki yoldan gelebilir: satırdaki "// …" ve/veya gövdedeki description
+    // (paneldeki çok satırlı alan). İkisi de varsa alt alta eklenir — girdi kaybolmaz.
+    const extra = String(e.requestInfo().body.description || "").trim()
+    task.set("description", [parsed.description, extra].filter(Boolean).join("\n\n"))
     task.set("sort_order", Date.now())
     $app.save(task)
 

@@ -45,13 +45,15 @@ Renk olmadığı için her anlamın sabit bir biçimi vardır:
 | Task durumu | `[ ]` todo · `[~]` doing · `[!]` blocked · `[x]` done |
 | Tamamlanmış | `ink3` + üstü çizili |
 | Öncelik | `!1` **bold** `ink` · `!2` regular `ink` · `!3` `ink2` · `!4` gösterilmez |
-| Gecikmiş | tarihi ters çevrilmiş etiket olarak: ▐`18.09`▌ (zemin `ink`, yazı `paper`) |
+| Gecikmiş (başlama günü geçmiş) | tarihi ters çevrilmiş etiket olarak: ▐`18.09`▌ (zemin `ink`, yazı `paper`) |
+| Son tarih (`due_date`) | `son 25.09`, `ink2`; **bugün ya da geçmişse** ters çevrilmiş etiket: ▐`son 25.09`▌ |
+| Açıklaması var | satır sonunda `≡`, `ink2` |
 | Seçili satır / klavye imleci | **tüm satır ters çevrilir** (e-ink menülerindeki gibi) |
 | Aktif task ("şu an bunu çalışıyorum") | satır başında `▸` |
 | Alan | `iş` / `kş` kısa etiketi, `ink2` |
 | Proje | `#ad`, `ink2` — hızlı ekleme sözdizimiyle aynı |
 | Panel klavyeyi dinliyor | çerçeve 1 px → **2 px** |
-| Hızlı eklemede algılanan token | altı çizili; çözülemeyen `#proje` altı **noktalı** |
+| Hızlı eklemede algılanan token | altı çizili; çözülemeyen `#proje` altı **noktalı**; `//` sonrası açıklama `ink2` (çizgisiz) |
 | Yük / ilerleme | blok karakterler: `████░░░░` |
 | Boş durum | tek satır `ink3` metin (`sıradaki ne?`) — illüstrasyon yok |
 
@@ -63,6 +65,7 @@ Renk olmadığı için her anlamın sabit bir biçimi vardır:
 - **Odak halkası:** sistem mavi halkası kapatılır; odak = 2 px `ink` çerçeve ya da ters çevirme.
 - **Buton:** varsa köşeli parantezli metin — `[ekle]`; basılıyken ters çevrilir. Çoğu ekranda hiç yoktur.
 - **Giriş alanı:** çerçevesiz, altında 1 px çizgi; imleç blok `█`.
+- **Hızlı eklemede açıklama:** kısa not satır içinde `// …`; `Tab` başlığın altında çok satırlı açıklama alanını açar (`Shift+Enter` yeni satır, `Tab` başlığa döner, `Enter` her iki alandan da ekler).
 - **Kısayol ipuçları:** ekranın altında tek satır `ink2`: `D tamamla · T süre · E detay · ? tümü`.
 - **Onay geri bildirimi:** tek karelik ters çevirme "flaşı" (e-ink'in tam yenilemesine gönderme) — temadaki tek "hareket"; ayarlardan kapatılabilir.
 - **Simge:** uygulama, menü çubuğu ve dock simgeleri de tek renk, düz, glif tabanlı. SF Symbols kullanılmaz; gerekirse Unicode glif (`▸ ✕ ░ █ ↑ ↓`).
