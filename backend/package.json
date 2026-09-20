@@ -1,0 +1,8 @@
+{
+  "name": "task-tracker-backend",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"tests/unit/*.test.js\"",
+    "test:api": "node --test \"tests/api/*.test.js\""
+  }
+}

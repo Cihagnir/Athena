@@ -1,0 +1,24 @@
+services:
+  pocketbase:
+    build: .
+    image: task-tracker-pocketbase:0.40.4
+    container_name: task-tracker-pb
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: ${TZ:-Europe/Istanbul}
+    ports:
+      # Yalnızca loopback; dışarıya açılım Faz 4'te `tailscale serve` ile.
+      - "127.0.0.1:${PB_PORT:-8090}:8090"
+    volumes:
+      - pb_data:/pb/pb_data
+      - ./pb_migrations:/pb/pb_migrations:ro
+      - ./pb_hooks:/pb/pb_hooks:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pb_data:

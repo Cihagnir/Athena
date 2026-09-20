@@ -1,0 +1,12 @@
+.DS_Store
+
+# backend
+backend/.env
+backend/pb_data/
+node_modules/
+
+# macos (proje dosyası XcodeGen ile project.yml'den üretilir)
+macos/*.xcodeproj
+macos/build/
+DerivedData/
+xcuserdata/
