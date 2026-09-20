@@ -9,6 +9,14 @@ import Testing
         #expect(Day.label("2026-09-23") == "23.09 Çar")
         #expect(Day.label("2027-01-01") == "01.01 Cum")
         #expect(Day.label("bozuk") == "bozuk")
+        #expect(Day.weekdayFirst("2026-09-20") == "Paz 20.09")
+    }
+
+    @Test func arithmetic() {
+        #expect(Day.adding(3, to: "2026-09-29") == "2026-10-02")
+        #expect(Day.adding(-1, to: "2027-01-01") == "2026-12-31")
+        #expect(Day.adding(7, to: "2028-02-23") == "2028-03-01")
+        #expect(Day.adding(1, to: "bozuk") == "bozuk")
     }
 }
 
@@ -137,6 +145,24 @@ struct LiveAPITests {
         _ = try await api.updateTask(id, TaskPatch(status: .todo))
         try await api.triage(id, .tomorrow)
         #expect(try await api.focusView().tasks.contains { $0.id == id } == false)
+        try await api.deleteTask(id)
+    }
+
+    @Test func weekViewPlacesTasksOnTheirDay() async throws {
+        let api = try await client()
+        let id = try await api.quickAdd(text: "zz-swift hafta yarın").task.id
+
+        var week = try await api.weekView()
+        #expect(week.days.count == 7 && week.days[0].date == week.today)
+        #expect(week.days[1].date == Day.adding(1, to: week.today))
+        #expect(week.days[1].tasks.contains { $0.id == id })
+
+        _ = try await api.updateTask(id, TaskPatch(scheduledDate: Day.adding(9, to: week.today)))
+        week = try await api.weekView()
+        #expect(week.days.allSatisfy { day in !day.tasks.contains { $0.id == id } })
+        let next = try await api.weekView(start: Day.adding(7, to: week.today))
+        #expect(next.days[2].tasks.contains { $0.id == id } && next.days[2].openCount >= 1)
+
         try await api.deleteTask(id)
     }
 

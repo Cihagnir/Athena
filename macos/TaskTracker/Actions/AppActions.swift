@@ -6,7 +6,7 @@ import SwiftUI
 /// bağlamı) ve Ayarlar'da görünür, global kısayol atanabilir olur.
 enum AppActions {
     static func all(for app: AppState) -> [AppAction] {
-        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + miniPanel(app) + listPanel(app) + quickAddDocs
+        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + week(app) + miniPanel(app) + listPanel(app) + quickAddDocs
     }
 
     private static func global(_ app: AppState) -> [AppAction] {
@@ -150,6 +150,30 @@ enum AppActions {
             action("escape", "Vazgeç / Odak'a dön", .escape, "esc") { [weak app] in
                 if store.mode == .choose { app?.route = .today } else { store.cancel() }
             },
+        ]
+    }
+
+    private static func week(_ app: AppState) -> [AppAction] {
+        let store = app.week
+        func action(_ id: String, _ title: String, _ keys: [KeyBinding], _ perform: @escaping () -> Void) -> AppAction {
+            AppAction(id: "week." + id, title: title, context: .week, keys: keys, showsInPalette: false, perform: perform)
+        }
+        return [
+            action("down", "Aşağı", [KeyBinding(key: .downArrow, display: "↓"), KeyBinding(key: "j", display: "J")]) { store.moveSelection(1) },
+            action("up", "Yukarı", [KeyBinding(key: .upArrow, display: "↑"), KeyBinding(key: "k", display: "K")]) { store.moveSelection(-1) },
+            action("later", "Task'ı bir gün ileri taşı", [KeyBinding(key: .rightArrow, display: "→"), KeyBinding(key: "l", display: "L")]) { store.shiftDay(1) },
+            action("earlier", "Task'ı bir gün geri taşı (en erken bugün)", [KeyBinding(key: .leftArrow, display: "←"), KeyBinding(key: "h", display: "H")]) { store.shiftDay(-1) },
+            action("today", "Task'ı bugüne al", [KeyBinding(key: "b", display: "B")]) { store.moveToToday() },
+            action("done", "Tamamla / geri al", [KeyBinding(key: "d", display: "D")]) { store.toggleDone() },
+            action("details", "Detayı aç / kapat", [KeyBinding(key: "e", display: "E")]) { store.toggleDetails() },
+            action("activate", "Aktif task yap / bırak", [KeyBinding(key: .return, display: "↵")]) { [weak app] in
+                guard let app, let task = app.week.selected else { return }
+                app.active.toggle(task)
+            },
+            action("next", "Sonraki hafta", [KeyBinding(key: ".", display: ".")]) { store.shiftWeek(1) },
+            action("previous", "Önceki hafta (bu haftadan geriye gidilmez)", [KeyBinding(key: ",", display: ",")]) { store.shiftWeek(-1) },
+            action("current", "Bu haftaya dön", [KeyBinding(key: "0", display: "0")]) { store.showCurrentWeek() },
+            action("escape", "Detayı kapat", [KeyBinding(key: .escape, display: "esc")]) { store.showsDetails = false },
         ]
     }
 

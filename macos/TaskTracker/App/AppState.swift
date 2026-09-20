@@ -22,13 +22,14 @@ enum Route: String, CaseIterable, Identifiable {
 
     /// Kenar çubuğundaki ⌘1…⌘6 görünümleri (Ayarlar ayrı durur: ⌘,).
     static let views: [Route] = [.today, .triage, .week, .kanban, .projects, .notes]
-    var isImplemented: Bool { [.today, .triage, .settings].contains(self) }
+    var isImplemented: Bool { [.today, .triage, .week, .settings].contains(self) }
 
     /// Görünümün kendi tuş bağlamı (`?` yardımında ilk sırada gösterilir).
     var context: ActionContext? {
         switch self {
         case .today: .todayList
         case .triage: .triage
+        case .week: .week
         default: nil
         }
     }
@@ -52,6 +53,7 @@ final class AppState {
     let projects: ProjectStore
     let active: ActiveTaskStore
     let triage: TriageStore
+    let week: WeekStore
     let quickAdd: QuickAddController
     let panel: PanelController
 
@@ -71,6 +73,7 @@ final class AppState {
         projects = ProjectStore(backend: backend)
         active = ActiveTaskStore(backend: backend)
         triage = TriageStore(backend: backend, projects: projects)
+        week = WeekStore(backend: backend)
         quickAdd = QuickAddController(backend: backend)
         panel = PanelController(settings: settings, active: active, today: today)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
@@ -190,6 +193,7 @@ final class AppState {
         backend.configure(url: settings.serverURL, token: nil)
         backend.lastError = message
         today.reset()
+        week.reset()
         active.reset()
         quickAdd.hide()
         panel.hide()
@@ -220,6 +224,7 @@ final class AppState {
                     case "tasks":
                         today.scheduleReload()
                         if route == .triage { await triage.refresh() }
+                        if route == .week { week.scheduleReload() }
                         if event.recordID == active.taskID { await active.reload() }
                     case "projects":
                         await projects.reload()

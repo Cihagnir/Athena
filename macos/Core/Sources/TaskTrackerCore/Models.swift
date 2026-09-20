@@ -69,6 +69,31 @@ public struct FocusView: Sendable, Decodable {
     public let done: [TaskItem]
 }
 
+/// `GET /api/views/week`
+public struct WeekView: Sendable, Decodable {
+    public struct DayColumn: Sendable, Decodable, Identifiable {
+        public let date: String
+        public let openCount: Int
+        public let doneCount: Int
+        /// O günün tüm task'ları (bitenler dahil), `sort_order` sıralı.
+        public let tasks: [TaskItem]
+        public var id: String { date }
+
+        enum CodingKeys: String, CodingKey {
+            case date, tasks
+            case openCount = "open_count"
+            case doneCount = "done_count"
+        }
+    }
+
+    public let today: String
+    public let start: String
+    public let end: String
+    public let days: [DayColumn]
+    /// Bugünden önceye planlı, bitmemiş task'lar (`start`'tan bağımsız).
+    public let overdue: [TaskItem]
+}
+
 /// `/api/focus*` yanıtları: aktif task + zamanlayıcı.
 public struct ActiveState: Sendable, Decodable {
     public struct State: Sendable, Decodable {

@@ -57,6 +57,11 @@ public struct APIClient: Sendable {
         try await send("GET", "/api/views/focus", query: area.map { ["area": $0.rawValue] } ?? [:])
     }
 
+    /// `start` verilmezse sunucunun "bugün"ünden başlayan 7 gün.
+    public func weekView(start: String? = nil) async throws -> WeekView {
+        try await send("GET", "/api/views/week", query: start.map { ["start": $0] } ?? [:])
+    }
+
     public func projects() async throws -> [Project] {
         let page: Page<Project> = try await send("GET", "/api/collections/projects/records",
                                                  query: ["perPage": "500", "sort": "name"])

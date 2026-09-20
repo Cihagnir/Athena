@@ -6,7 +6,7 @@ task_tracker'ın macOS uygulaması: Swift 6 + SwiftUI (gerektiği yerde AppKit),
 - Görsel dil (her ekranın uyduğu kurallar): [../docs/DESIGN.md](../docs/DESIGN.md)
 - Yol haritası: [../docs/PLAN.md](../docs/PLAN.md) → Faz 2
 
-**Durum:** Faz 2 / adım 1–3 + adım 4'ten **Triyaj** tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
+**Durum:** Faz 2 / adım 1–3 + adım 4'ten **Triyaj ve Hafta** tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
 
 ---
 
@@ -64,6 +64,11 @@ open build/Build/Products/Debug/TaskTracker.app
 | Triyaj | `4` | Sil — `↵` ile onaylanır |
 | Triyaj | `D` / `␣` | Tamamlandı say / atla (atlanan kuyruğun sonunda kalmaz; bir sonraki triyajda yeniden gelir) |
 | Triyaj | `esc` | Alt moddan çık; karar ekranındaysa Odak'a dön |
+| Hafta | `↑↓` / `J K` | Gezin (gecikenler + 7 gün, tek liste) |
+| Hafta | `←` `→` / `H L` | Seçili task'ı bir gün geri / ileri taşı. Geçmişe taşınmaz (en erken bugün); gecikmiş task `→` ile bugüne gelir |
+| Hafta | `B` | Task'ı bugüne al |
+| Hafta | `D` · `E` · `↵` | Tamamla / geri al · detay · aktif yap |
+| Hafta | `.` `,` `0` | Sonraki hafta · önceki hafta (bu haftadan geriye gidilmez) · bu haftaya dön |
 | Hızlı ekleme | `↵` | Ekle (panel açık kalır) |
 | Hızlı ekleme | `⇥` | Çok satırlı açıklama alanı ↔ başlık |
 | Hızlı ekleme | `⇧↵` | Açıklamada yeni satır |
@@ -106,10 +111,11 @@ TaskTracker/               uygulama hedefi
     Backend.swift          güncel APIClient + merkezi hata ele alma
     TodayStore.swift       Odak ekranının durumu ve aksiyonları
     TriageStore.swift      Triyaj kuyruğu, karar modları (tarih / proje / silme onayı)
+    WeekStore.swift        Hafta görünümü: 7 gün + gecikenler, gün taşıma, haftalar arası gezinme
     SupportingStores.swift ProjectStore (adlar), ActiveTaskStore (aktif task + zamanlayıcı)
     InkTextView.swift      token vurgulu metin alanı (NSTextView); hızlı ekleme ve palet kullanır
   Features/
-    Login/ Main/ Today/ Triage/ QuickAdd/ Settings/
+    Login/ Main/ Today/ Triage/ Week/ QuickAdd/ Settings/
     Overlays/              PaletteView (⌘K), HelpView (?) — ana pencerenin üstüne açılan katmanlar
     Panel/                 PanelController (durum + pencere), PanelView (mini ve liste içerikleri)
     MenuBar/               MenuBarMenu — menü çubuğu öğesinin menüsü
@@ -169,6 +175,14 @@ Kuyruk `GET /api/views/focus`'tur (alan filtresiz): bugüne ya da öncesine plan
 - **Tarih** istemcide çözülmez: `APIClient.resolveDate` metni `/api/quickadd/preview`'a `"x <metin>"` olarak yollar ve yalnızca metnin tamamı tek bir tarih token'ıysa sonucu kabul eder → hızlı eklemeyle aynı sözlük, tek yerde.
 - **Proje** seçici bitmemiş projeleri listeler; tam eşleşme yoksa sona "+ yeni proje" satırı ekler. Uygulamada proje yaratmanın şimdilik tek yolu budur (Projeler görünümü gelene kadar).
 - Realtime `tasks` olayında kuyruk yenilenir, üzerinde durulan task korunur. Kenar çubuğundaki TRİYAJ sayısı başlama günü **geçmiş** task'lardır (`TodayStore.overdue`).
+
+### Hafta
+
+`GET /api/views/week` (`start` verilmezse sunucunun bugününden 7 gün). Düzen: üstte **yük şeridi** (gün başına açık task sayısı; çubuk uzunluğu haftanın en yoğun gününe oranlı), altında gün gün **ajanda**. Yan yana 7 sütun bilinçli olarak seçilmedi: 1180 px pencerede sütun başına ~17 karakter kalıyor.
+
+- Gün taşıma `PATCH scheduled_date` ile yapılır (`WeekStore.shiftDay`); gün aritmetiği `Day.adding` (Core), "bugün" yine sunucunun `today` alanı. Geçmişe taşıma engellidir.
+- `TaskRow` ve `TaskDetails` Odak ekranıyla ortaktır. Görünümün adı `WeekScreen`'dir (`WeekView` Core'daki modelin adı).
+- `.` / `,` haftayı 7 gün kaydırır; bu haftaya dönünce `start` yeniden `nil` olur ki gün değişince görünüm kendiliğinden ilerlesin.
 
 ### Yüzen panel
 
@@ -271,7 +285,7 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 ## Sıradakiler (PLAN.md → Faz 2)
 
-- **Adım 4 (devam):** ~~Triyaj~~ → Hafta → Kanban → Projeler → Notlar.
+- **Adım 4 (devam):** ~~Triyaj~~ → ~~Hafta~~ → Kanban → Projeler → Notlar.
 - Yüzen panelde eksik kalanlar: `N` ile task'a not düşme, liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
 - Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).
-- Bilinen boşluk: yarına ya da ileriye planlı task'lar Hafta görünümü gelene kadar hiçbir ekranda görünmez (Odak yalnızca bugün + gecikenleri gösterir).
+- Bilinen boşluk: **plansız** task'lar (projeli + tarihsiz) Projeler/Kanban gelene kadar hiçbir ekranda görünmez (Odak bugün + gecikenleri, Hafta tarihli olanları gösterir).
