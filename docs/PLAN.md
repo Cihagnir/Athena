@@ -127,7 +127,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 **Yüzen paneller** (`NSPanel`, her zaman üstte, odağı çalmaz, tüm masaüstlerinde, konumu hatırlanır)
 1. **Mini panel — tek task odaklı:** o an üzerinde çalışılan task'ı gösterir. Hotkey ile **genişler** → task detayları (notlar, proje, tarih, öncelik) görünür; tekrar basınca daralır.
 2. **Liste paneli:** bugünün task'ları; tıklayarak tamamlama, bir task'ı "şu an bunu çalışıyorum" olarak işaretleme.
-- İkisi arasında hotkey ile geçiş; ayrı bir hotkey ile gizle/göster.
+- İkisi **aynı köşeyi paylaşır**: liste paneli açılınca mini panelin yerini alır, `Esc` ile mini panele dönülür (aynı anda ikisi görünmez). Hotkey ile geçiş; ayrı bir hotkey ile gizle/göster. Konum ve ölçüler: [DESIGN.md](DESIGN.md) → Yerleşim.
 
 **Hızlı ekleme paneli**
 - Global hotkey ile her yerden açılır, canlı parse önizlemesi gösterir.
@@ -149,7 +149,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 - Yeni akış eklemek = kayda birkaç satır; palette/ayarlarda/yardımda kendiliğinden görünür. Kısayollar bu yüzden **önceden tek tek belirlenmez, geliştirme sırasında kullanıma göre eklenir.**
 - **Her aksiyona ayarlardan isteğe bağlı global kısayol atanabilir** → model varsayılan olarak katmanlıdır; kullanıcı sık kullandığı aksiyonu (örn. "aktif task'ı tamamla") kod değişmeden doğrudan global'e terfi ettirir.
 
-**Mini panel halleri:** *pasif* (görünür, klavyeyi dinlemez) → global hotkey → *dinliyor* (kenarlık yanar) → `E` → *geniş* (detaylar). `H` gizler. Liste paneli açıldığında doğrudan dinler; `P` ile sabitlenirse pasif dashboard olarak köşede kalır, `Esc` ile kapanır.
+**Mini panel halleri:** *pasif* (görünür, klavyeyi dinlemez) → global hotkey → *dinliyor* (kenarlık yanar) → `E` → *geniş* (detaylar). `H` gizler. Liste paneli mini panelin yerinde açılır ve doğrudan dinler; `P` ile sabitlenirse pasif dashboard olarak köşede kalır, `Esc` ile mini panele döner.
 
 - *Katman 1 — Global (her uygulamadan; az sayıda, modifier'lı):* hızlı ekleme · mini panel (göster + odağı ver / gizle) · liste paneli · ana pencere.
 - *Katman 2 — Panel odaktayken tek tuş (modifier'sız):* global hotkey, **uygulama değiştirmeden** klavye odağını panele verir (Spotlight davranışı: `NSPanel` + `.nonactivatingPanel` — öndeki uygulama önde ve görünür kalır, ana pencere açılmaz, masaüstü değişmez). Panel dinlerken ince bir kenarlıkla belli eder. **Tek atımlık aksiyonlardan** (`D`, `T`+süre, aktif task seçimi) sonra odak **otomatik olarak** önceki uygulamaya döner; `E` gibi "bakma" modlarında `Esc`'e kadar panelde kalır.
