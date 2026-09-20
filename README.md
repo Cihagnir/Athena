@@ -6,6 +6,8 @@ Kişisel, self-hosted **task + not sistemi**. Todoist'in yerine; tamamen modifiy
 - **macOS:** Swift + SwiftUI — menü çubuğu, global hotkey'ler, yüzen dashboard panelleri
 - **Android:** ayrı native uygulama (teknoloji kararı ertelendi)
 
+**İş takibi:** Linear → proje **Athena** (https://linear.app/<workspace>/project/athena-4106d99abde6) — yapılanlar `Done`, bilinen eksikler / doğrulanmamış noktalar / ertelenenler `Todo` ve `Backlog` (CIH-220…250). Yeni eksik fark edilince oraya issue aç.
+
 | Doküman | İçerik |
 |---|---|
 | [docs/PLAN.md](docs/PLAN.md) | Mimari, veri modeli, ekranlar, klavye mimarisi, fazlar, doğrulama |
