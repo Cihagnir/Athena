@@ -1,0 +1,127 @@
+import AppKit
+import SwiftUI
+import TaskTrackerCore
+
+/// Hızlı eklemenin metin alanı. SwiftUI `TextField` aralık bazında biçim
+/// veremediği için `NSTextView` sarılır: API'den gelen token aralıkları (UTF-16
+/// ofsetleri = `NSRange`) doğrudan alt çizgiye dönüşür.
+///
+/// Tuşlar burada yakalanır: ↵ gönder · ⇧↵ yeni satır (çok satırlıda) · ⇥ alan
+/// değiştir · esc kapat.
+struct InkTextView: NSViewRepresentable {
+    @Binding var text: String
+    var fontSize = Theme.Size.body
+    var multiline = false
+    var tokens: [ParsedInput.Token] = []
+    /// Değeri her değiştiğinde alan klavye odağını alır.
+    var focusTrigger = 0
+    var onSubmit: () -> Void = {}
+    var onTab: () -> Void = {}
+    var onCancel: () -> Void = {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let textView = NSTextView()
+        textView.delegate = context.coordinator
+        textView.isRichText = false
+        textView.allowsUndo = true
+        textView.drawsBackground = false
+        textView.textContainerInset = .zero
+        textView.textContainer?.lineFragmentPadding = 0
+        textView.insertionPointColor = Theme.inkNS
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isContinuousSpellCheckingEnabled = false
+        textView.autoresizingMask = [.width]
+        textView.isVerticallyResizable = true
+
+        if !multiline {
+            // Tek satır: sarmak yerine yatayda kayar.
+            textView.isHorizontallyResizable = true
+            textView.textContainer?.widthTracksTextView = false
+            textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        }
+
+        let scroll = NSScrollView()
+        scroll.documentView = textView
+        scroll.drawsBackground = false
+        scroll.hasVerticalScroller = false
+        scroll.hasHorizontalScroller = false
+        scroll.borderType = .noBorder
+        context.coordinator.textView = textView
+        return scroll
+    }
+
+    func updateNSView(_ scroll: NSScrollView, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.parent = self
+        guard let textView = coordinator.textView else { return }
+
+        if textView.string != text { textView.string = text }
+        applyStyle(to: textView)
+
+        if coordinator.lastFocusTrigger != focusTrigger {
+            coordinator.lastFocusTrigger = focusTrigger
+            DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) }
+        }
+    }
+
+    private func applyStyle(to textView: NSTextView) {
+        guard let storage = textView.textStorage else { return }
+        let base: [NSAttributedString.Key: Any] = [.font: Theme.nsFont(fontSize), .foregroundColor: Theme.inkNS]
+        textView.typingAttributes = base
+
+        storage.beginEditing()
+        storage.setAttributes(base, range: NSRange(location: 0, length: storage.length))
+        for token in tokens where token.range.upperBound <= storage.length {
+            switch token.kind {
+            case .description:
+                storage.addAttribute(.foregroundColor, value: Theme.ink2NS, range: token.range)
+            case .project where !token.resolved:
+                let dotted = NSUnderlineStyle.single.rawValue | NSUnderlineStyle.patternDot.rawValue
+                storage.addAttribute(.underlineStyle, value: dotted, range: token.range)
+            default:
+                storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: token.range)
+            }
+        }
+        storage.endEditing()
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: InkTextView
+        weak var textView: NSTextView?
+        var lastFocusTrigger = -1
+
+        init(_ parent: InkTextView) { self.parent = parent }
+
+        func textDidChange(_ notification: Notification) {
+            guard let textView else { return }
+            parent.text = textView.string
+        }
+
+        func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+            switch selector {
+            case #selector(NSResponder.insertNewline(_:)):
+                let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
+                if parent.multiline && shift {
+                    textView.insertNewlineIgnoringFieldEditor(nil)
+                } else {
+                    parent.onSubmit()
+                }
+                return true
+            case #selector(NSResponder.insertTab(_:)), #selector(NSResponder.insertBacktab(_:)):
+                parent.onTab()
+                return true
+            case #selector(NSResponder.cancelOperation(_:)):
+                parent.onCancel()
+                return true
+            default:
+                return false
+            }
+        }
+    }
+}

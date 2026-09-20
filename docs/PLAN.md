@@ -40,7 +40,7 @@ Todoist (ve genel olarak hazır araçlar) zamanla yetmiyor; hedef, **tamamen mod
 
 - `POST /api/quickadd` — ham metni alır, parse eder, task'ı oluşturur. Parser tek yerde; Swift ve Kotlin'de tekrar yazılmaz. Bonus: `curl`, macOS Shortcuts, ileride CLI — hepsi aynı endpoint'i kullanır.
 - `POST /api/quickadd/preview` — yazarken canlı önizleme (neyin tarih/öncelik/proje algılandığı).
-- `GET /api/views/focus`, `GET /api/views/week`, `GET /api/views/projects` — odak listesi, haftalık yük ve proje panoraması gibi toplu hesaplar server'da; istemci hazır JSON'u çizer. "Bugün"ün ne olduğuna da server karar verir (`TZ`).
+- `GET /api/views/focus` (açık task'lar + bugün bitenler), `GET /api/views/week`, `GET /api/views/projects` — odak listesi, haftalık yük ve proje panoraması gibi toplu hesaplar server'da; istemci hazır JSON'u çizer. "Bugün"ün ne olduğuna da server karar verir (`TZ`).
 - `POST /api/triage/:id` — `tomorrow | date | to_project | delete` aksiyonları tek noktadan.
 - `GET /api/focus`, `POST /api/focus/:id`, `/api/focus/clear`, `/api/focus/timer` — aktif task ve zamanlayıcı durumu.
 
@@ -158,7 +158,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 - *Katman 3 — Ana pencere:* `⌘1…⌘6` görünümler · `⌘N` task · `⌘⇧N` not · triyajda `1–4` · **`⌘K` komut paleti** (her aksiyon adıyla aranabilir → %100 klavye kapsaması) · `?` o ekrana özel kısayol listesi.
 
 **Sıra**
-1. Proje iskeleti (XcodeGen) + `Theme` (DESIGN.md belirteçleri) + API istemcisi + giriş + `ActionRegistry` + Odak ekranı + hızlı ekleme paneli → **gerçek kullanıma geçiş noktası**
+1. ✅ *(2026-09-20)* Proje iskeleti (XcodeGen) + `Theme` (DESIGN.md belirteçleri) + API istemcisi + giriş + `ActionRegistry` + Odak ekranı + hızlı ekleme paneli + Ayarlar (sunucu adresi, görünüm, kısayol listesi) → **gerçek kullanıma geçiş noktası**. Uygulama belgesi: [../macos/README.md](../macos/README.md)
 2. Menü çubuğu öğesi + login item + kısayol ayarları + `⌘K` komut paleti
 3. Yüzen paneller (mini → liste) + aktif task + zamanlayıcı çubuğu
 4. Triyaj (klavye odaklı) → Hafta → Kanban → Projeler → Notlar
@@ -184,7 +184,7 @@ Faz 2 ve 3 yalnızca `docs/api.md`'ye bağımlı; sıraları değiştirilebilir 
 
 ## Doğrulama
 
-- **Backend** *(✅ `pnpm test` 30/30, `pnpm test:api` 16/16)*: `docker compose up` → admin UI açılıyor, koleksiyonlar migration'dan oluşmuş. Parser testleri geçiyor. `docs/api.md`'deki her `curl` örneği beklenen yanıtı veriyor; giriş yapılmadan tüm endpoint'ler `401/403` dönüyor.
+- **Backend** *(✅ `pnpm test` 30/30, `pnpm test:api` 17/17)*: `docker compose up` → admin UI açılıyor, koleksiyonlar migration'dan oluşmuş. Parser testleri geçiyor. `docs/api.md`'deki her `curl` örneği beklenen yanıtı veriyor; giriş yapılmadan tüm endpoint'ler `401/403` dönüyor.
 - **Realtime:** `curl` ile eklenen task, açık uygulamadaki Odak/Dashboard'da yenilemeden beliriyor.
 - **macOS:** global hotkey başka bir uygulama öndeyken paneli açıyor; satır yazıp Enter → task oluşuyor; dashboard paneli tam ekran olmayan tüm pencerelerin üstünde kalıyor.
 - **Android:** dashboard modunda ekran kapanmıyor; widget güncel odak listesini gösteriyor; Mac'ten eklenen task telefonda saniyeler içinde görünüyor.

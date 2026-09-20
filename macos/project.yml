@@ -1,0 +1,45 @@
+# XcodeGen proje tanımı. *.xcodeproj bu dosyadan üretilir ve repoya girmez:
+#   xcodegen generate
+name: TaskTracker
+options:
+  bundleIdPrefix: local.tasktracker
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+packages:
+  TaskTrackerCore:
+    path: Core
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 2.0.0
+targets:
+  TaskTracker:
+    type: application
+    platform: macOS
+    sources: [TaskTracker]
+    dependencies:
+      - package: TaskTrackerCore
+      - package: KeyboardShortcuts
+    info:
+      path: TaskTracker/Info.plist
+      properties:
+        CFBundleDisplayName: task_tracker
+        LSApplicationCategoryType: public.app-category.productivity
+        # Sunucu yerelde ya da tailnet içinde düz http olabilir (Faz 4'te https).
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: local.tasktracker.mac
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        # Arayüz modülü: aksi belirtilmedikçe her şey ana aktörde.
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        # Apple Developer hesabı yok → yerel (ad-hoc) imza; yalnızca bu Mac'te çalışır.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_APP_SANDBOX: NO

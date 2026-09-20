@@ -14,10 +14,11 @@ Kişisel, self-hosted **task + not sistemi**. Todoist'in yerine; tamamen modifiy
 | [docs/api.md](docs/api.md) | İki uygulamanın da uyduğu API sözleşmesi (`curl` örnekleriyle) |
 | [docs/data-model.md](docs/data-model.md) | Koleksiyonlar ve alanlar |
 | [backend/README.md](backend/README.md) | Backend'i çalıştırma, testler, sürüm yükseltme |
+| [macos/README.md](macos/README.md) | Mac uygulaması: çalıştırma, kısayollar, mimari, yeni aksiyon/görünüm ekleme rehberi |
 
 ```
 backend/   PocketBase (Docker) + pb_hooks iş mantığı + testler
-macos/     Swift + SwiftUI uygulaması (Faz 2 — henüz boş)
+macos/     Swift + SwiftUI uygulaması: Core (API paketi) + TaskTracker (arayüz)
 docs/      plan, kararlar, tasarım, API sözleşmesi
 ```
 
@@ -25,17 +26,28 @@ docs/      plan, kararlar, tasarım, API sözleşmesi
 
 ## Durum — 2026-09-20
 
-**Faz 0 (iskelet) ve Faz 1 (backend) tamamlandı.** Backend yerelde Docker'da çalışıyor; parser birim testleri 21/21, uçtan uca API testleri 15/15 (401 koruması, quickadd, görünümler, triyaj, aktif task + zamanlayıcı, SSE realtime). Tasarım teması belirlendi: [docs/DESIGN.md](docs/DESIGN.md). Sıradaki: **Faz 2 — macOS uygulaması.**
+| Faz | Durum |
+|---|---|
+| 0 · İskelet | ✅ |
+| 1 · Backend | ✅ parser 30/30, API 17/17 |
+| 2 · macOS | **adım 1 ✅** — giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar (sunucu adresi + kısayollar), aksiyon kaydı. Core paketi 8/8 (canlı sözleşme testleri dahil). Adım 2–4 sırada. |
+| 3 · Android · 4 · Deploy | sırada değil |
 
-### Ön koşullar — hepsi tamam
-
-Xcode 27.0 (lisans kabul edildi) · Swift 6.4 · XcodeGen · git · Docker (colima). Repo `main` dalında, ilk commit atıldı.
+Tasarım: [docs/DESIGN.md](docs/DESIGN.md) + görsel taslak tuvali (bağlantısı dokümanın başında).
 
 ### Devam ederken ilk adım
 
-**Faz 2 / adım 1:** XcodeGen iskeleti → `Theme` (DESIGN.md belirteçleri) → API istemcisi + giriş → `ActionRegistry` → Odak ekranı + hızlı ekleme paneli (ilk kullanılabilir sürüm)
+**Faz 2 / adım 2:** menü çubuğu öğesi (`▸ 3/7`) → oturum açılışında otomatik başlama → `⌘K` komut paleti → `?` kısayol yardımı. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
 
-Ayrıntılar: [docs/PLAN.md](docs/PLAN.md) → "Uygulama adımları".
+### Mac uygulamasını çalıştırma
+
+```sh
+cd macos && xcodegen generate
+xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker -configuration Debug -derivedDataPath build build
+open build/Build/Products/Debug/TaskTracker.app
+```
+
+Mimari, "nasıl yapılır" rehberleri ve bilinen sapmalar: [macos/README.md](macos/README.md).
 
 ### Backend'i çalıştırma
 

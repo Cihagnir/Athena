@@ -13,7 +13,13 @@ routerAdd("GET", "/api/views/focus", (e) => {
     let filter = "scheduled_date != '' && scheduled_date <= {:today} && status != 'done'"
     if (area) filter += " && area = {:area}"
     const tasks = store.find("tasks", filter, "sort_order", { today: today, area: area })
-    return e.json(200, { today: today, tasks: tasks })
+
+    // Bugün (yerel gün) tamamlananlar: ilerleme göstergesi ve "biten" bölümü için.
+    let doneFilter = "status = 'done' && completed_at >= {:since}"
+    if (area) doneFilter += " && area = {:area}"
+    const done = store.find("tasks", doneFilter, "-completed_at", { since: dates.localMidnightUTC(today), area: area })
+
+    return e.json(200, { today: today, tasks: tasks, done: done })
 }, $apis.requireAuth("users"))
 
 // GET /api/views/week?start=YYYY-MM-DD   (varsayılan: bugün; 7 gün)

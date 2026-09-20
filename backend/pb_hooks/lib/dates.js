@@ -35,4 +35,10 @@ function today() {
     return format(d.getFullYear(), d.getMonth() + 1, d.getDate())
 }
 
-module.exports = { format, isValid, addDays, weekday, today }
+// Yerel günün başlangıcı, PocketBase datetime biçiminde (UTC): "2026-09-19 21:00:00.000Z"
+function localMidnightUTC(ymd) {
+    const parts = ymd.split("-")
+    return new Date(+parts[0], +parts[1] - 1, +parts[2]).toISOString().replace("T", " ")
+}
+
+module.exports = { format, isValid, addDays, weekday, today, localMidnightUTC }

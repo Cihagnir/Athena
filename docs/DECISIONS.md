@@ -115,6 +115,20 @@ Planlama oturumunda (2026-09-20) alınan kararlar, gerekçeleri ve elenen altern
 
 **Elenenler:** yalnızca `Tab` alanı (tek satırlık istemciler açıklama ekleyemezdi) · yalnızca `//` (çok satır yazılamaz) · ayrı "özet" ve "detay" alanları (tek markdown alanı yeterli; kalıcı uzun içerik için Notlar + `tasks.note` bağı var).
 
+## 12. macOS uygulama kararları *(2026-09-20, Faz 2 adım 1)*
+
+| Konu | Karar | Gerekçe |
+|---|---|---|
+| Katmanlama | `macos/Core` (Swift paketi: modeller, API, realtime — arayüzsüz) + `macos/TaskTracker` (SwiftUI) | Core `swift test` ile, çalışan backend'e karşı da sınanıyor; arayüz otomasyonu olmadan sözleşme güvencesi. |
+| İstemci durumu | İyimser güncelleme yok: her aksiyondan sonra ve her realtime olayında liste sunucudan yeniden çekilir | Tek doğruluk kaynağı sunucu; yerel ağda gecikme fark edilmez, tutarsızlık sınıfı ortadan kalkar. |
+| Token saklama | `UserDefaults` (Keychain değil); parola saklanmaz | Ad-hoc imzada Keychain her derlemede izin soruyor. Tek kullanıcılı Mac + tailnet içi sunucu için kabul edilebilir. |
+| Eşzamanlılık | Swift 6, uygulama modülünde varsayılan ana aktör; Core'da `Sendable` değer tipleri | Arayüz kodunda aktör gürültüsü yok, derleyici veri yarışlarını yine de denetliyor. |
+| Global kısayol | Her aksiyonun atanabilir bir global yuvası var; varsayılanlar yalnızca `⌃⌥Space` (hızlı ekleme) ve `⌃⌥T` (ana pencere) | PLAN'daki "aksiyonu kod değiştirmeden global'e terfi ettir" ilkesi. `⌥Space` başka araçlarla çakıştığı için seçilmedi. |
+| Ayarlar | Ayrı pencere değil, ana pencerede bir görünüm (`⌘,`) | Tek pencere, tek görsel dil; kullanıcı isteği "ufak bir ayarlar sekmesi". |
+| Odak: bugün bitenler | `GET /api/views/focus` yanıtına `done` eklendi | İlerleme çubuğu (`2/7`) ve BİTEN bölümü için; "bugün"ü yine server belirliyor. |
+
+Tasarımdan bilinen sapmalar (yuvarlak pencere köşesi, blok imleç, kısayol kaydedici kutusu): [../macos/README.md](../macos/README.md) → "Bilinçli kararlar ve tasarımdan sapmalar".
+
 ## Ertelenen kararlar
 
 - **Android teknolojisi** (Kotlin/Compose varsayılan aday) — Mac tasarımı oturduktan sonra.

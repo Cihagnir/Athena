@@ -148,6 +148,17 @@ test("views/focus: bugünün task'ı listede, alan filtresi çalışıyor", asyn
     assert.equal((await api("GET", "/api/views/focus?area=x")).status, 400)
 })
 
+test("views/focus: bugün tamamlananlar done listesinde; geri alınınca çıkar", async () => {
+    const { task } = await quickadd("zz-test biten")
+    await api("PATCH", `/api/collections/tasks/records/${task.id}`, { status: "done" })
+    let r = await api("GET", "/api/views/focus")
+    assert.ok(!r.body.tasks.some((t) => t.id === task.id))
+    assert.ok(r.body.done.some((t) => t.id === task.id))
+    await api("PATCH", `/api/collections/tasks/records/${task.id}`, { status: "todo" })
+    r = await api("GET", "/api/views/focus")
+    assert.ok(!r.body.done.some((t) => t.id === task.id))
+})
+
 test("views/week: 7 gün, task doğru günde sayılıyor", async () => {
     const { task } = await quickadd("zz-test hafta yarın")
     const r = await api("GET", "/api/views/week")

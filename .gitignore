@@ -8,5 +8,7 @@ node_modules/
 # macos (proje dosyası XcodeGen ile project.yml'den üretilir)
 macos/*.xcodeproj
 macos/build/
+macos/TaskTracker/Info.plist
+macos/Core/.build/
 DerivedData/
 xcuserdata/

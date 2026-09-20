@@ -111,7 +111,9 @@ Odak, Dashboard ve Triyaj'ın listesi: `scheduled_date ≤ bugün ∧ status ≠
 curl -s "$PB/api/views/focus?area=work" -H "Authorization: $TOKEN"
 ```
 
-→ `{ "today": "2026-09-20", "tasks": [ <task>, … ] }`
+→ `{ "today": "2026-09-20", "tasks": [ <task>, … ], "done": [ <task>, … ] }`
+
+`done`: **bugün** (server'ın yerel günü) tamamlanan task'lar, en son biten önce; `area` filtresi buna da uygulanır. İlerleme göstergesi = `done.length / (done.length + tasks.length)`.
 
 ### `GET /api/views/week?start=YYYY-MM-DD`
 
