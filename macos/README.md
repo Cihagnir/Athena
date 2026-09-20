@@ -6,7 +6,7 @@ task_tracker'ın macOS uygulaması: Swift 6 + SwiftUI (gerektiği yerde AppKit),
 - Görsel dil (her ekranın uyduğu kurallar): [../docs/DESIGN.md](../docs/DESIGN.md)
 - Yol haritası: [../docs/PLAN.md](../docs/PLAN.md) → Faz 2
 
-**Durum:** Faz 2 / adım 1–3 tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
+**Durum:** Faz 2 / adım 1–3 + adım 4'ten **Triyaj** tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
 
 ---
 
@@ -58,6 +58,12 @@ open build/Build/Products/Debug/TaskTracker.app
 | Odak listesi | `Y` | Yarına at |
 | Odak listesi | `1`–`4` | Öncelik |
 | Odak listesi | `⇥` | Alan filtresi: hepsi → iş → kişisel |
+| Triyaj | `1` | Yarına at |
+| Triyaj | `2` | Tarih seç: hızlı eklemenin sözlüğüyle yazılır (`cuma`, `yarın`, `25.09`); çözülen gün canlı görünür, `↵` onaylar |
+| Triyaj | `3` | Projeye taşı: yazarak süz, `↑↓` seç, `↵` taşı. Listede olmayan ad **yeni proje** olarak oluşturulur (alanı task'tan, yoksa kişisel). Task günlük akıştan çıkar |
+| Triyaj | `4` | Sil — `↵` ile onaylanır |
+| Triyaj | `D` / `␣` | Tamamlandı say / atla (atlanan kuyruğun sonunda kalmaz; bir sonraki triyajda yeniden gelir) |
+| Triyaj | `esc` | Alt moddan çık; karar ekranındaysa Odak'a dön |
 | Hızlı ekleme | `↵` | Ekle (panel açık kalır) |
 | Hızlı ekleme | `⇥` | Çok satırlı açıklama alanı ↔ başlık |
 | Hızlı ekleme | `⇧↵` | Açıklamada yeni satır |
@@ -99,10 +105,11 @@ TaskTracker/               uygulama hedefi
     AppSettings.swift      UserDefaults: sunucu adresi, e-posta, token, görünüm
     Backend.swift          güncel APIClient + merkezi hata ele alma
     TodayStore.swift       Odak ekranının durumu ve aksiyonları
+    TriageStore.swift      Triyaj kuyruğu, karar modları (tarih / proje / silme onayı)
     SupportingStores.swift ProjectStore (adlar), ActiveTaskStore (aktif task + zamanlayıcı)
     InkTextView.swift      token vurgulu metin alanı (NSTextView); hızlı ekleme ve palet kullanır
   Features/
-    Login/ Main/ Today/ QuickAdd/ Settings/
+    Login/ Main/ Today/ Triage/ QuickAdd/ Settings/
     Overlays/              PaletteView (⌘K), HelpView (?) — ana pencerenin üstüne açılan katmanlar
     Panel/                 PanelController (durum + pencere), PanelView (mini ve liste içerikleri)
     MenuBar/               MenuBarMenu — menü çubuğu öğesinin menüsü
@@ -153,6 +160,15 @@ Ayarlar'daki kısayol tablosu da aynı listeden çizilir ve **her aksiyonun bir 
 ### Menü çubuğu ve otomatik başlama
 
 `TaskTrackerApp` içindeki `MenuBarExtra` sahnesi; etiketi `AppState.menuBarLabel`, görünürlüğü `AppSettings.showsMenuBarItem`. Oturum kurulumu (`bootstrap`) görünümden bağımsız olarak `AppState.init` içinde başlar — pencere hiç açılmasa da (login item) sayılar ve realtime çalışır. `LoginItem.launchedAtLogin` doğruysa `AppDelegate` açılışta pencereyi kapatır.
+
+### Triyaj
+
+Kuyruk `GET /api/views/focus`'tur (alan filtresiz): bugüne ya da öncesine planlı, bitmemiş her şey. `TriageStore` yalnızca sırayı ve giriş modunu tutar; kararları sunucu uygular (`POST /api/triage/{id}`).
+
+- **Modlar:** `.choose` (1–4) → `.date` / `.project` / `.confirmDelete`. Metin yazılan modlarda klavye `InkTextView`'dadır; görünüm odağı bırakır (`keyboardFocus(unless: store.isTyping)`), bu yüzden `1`–`4` yazarken tetiklenmez.
+- **Tarih** istemcide çözülmez: `APIClient.resolveDate` metni `/api/quickadd/preview`'a `"x <metin>"` olarak yollar ve yalnızca metnin tamamı tek bir tarih token'ıysa sonucu kabul eder → hızlı eklemeyle aynı sözlük, tek yerde.
+- **Proje** seçici bitmemiş projeleri listeler; tam eşleşme yoksa sona "+ yeni proje" satırı ekler. Uygulamada proje yaratmanın şimdilik tek yolu budur (Projeler görünümü gelene kadar).
+- Realtime `tasks` olayında kuyruk yenilenir, üzerinde durulan task korunur. Kenar çubuğundaki TRİYAJ sayısı başlama günü **geçmiş** task'lardır (`TodayStore.overdue`).
 
 ### Yüzen panel
 
@@ -223,12 +239,12 @@ Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etme
 
 ```sh
 TT_DEBUG_ROUTE=settings \
-TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded \
+TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded TT_DEBUG_TRIAGE=date \
 TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma !1 // kısa not" \
   build/Build/Products/Debug/TaskTracker.app/Contents/MacOS/TaskTracker
 ```
 
-(`TT_DEBUG_OVERLAY`: `palette` | `help`. `TT_DEBUG_PANEL`: `listen` | `expanded` | `timer` | `list` — yüzen panelin halini klavye odağı olmadan zorlar. Not: uygulama terminalden arka planda başlatılıp pasifleşince gerçek klavye odağı düşer; panel halleri bu yüzden zorlanarak doğrulanır.)
+(`TT_DEBUG_TRIAGE`: `choose` | `date` | `project`. `TT_DEBUG_OVERLAY`: `palette` | `help`. `TT_DEBUG_PANEL`: `listen` | `expanded` | `timer` | `list` — yüzen panelin halini klavye odağı olmadan zorlar. Not: uygulama terminalden arka planda başlatılıp pasifleşince gerçek klavye odağı düşer; panel halleri bu yüzden zorlanarak doğrulanır.)
 
 Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults delete local.tasktracker.mac`
 Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/Library/Saved\ Application\ State/local.tasktracker.mac.savedState`
@@ -255,7 +271,7 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 ## Sıradakiler (PLAN.md → Faz 2)
 
-- **Adım 4:** Triyaj → Hafta → Kanban → Projeler → Notlar.
+- **Adım 4 (devam):** ~~Triyaj~~ → Hafta → Kanban → Projeler → Notlar.
 - Yüzen panelde eksik kalanlar: `N` ile task'a not düşme, liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
 - Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).
 - Bilinen boşluk: yarına ya da ileriye planlı task'lar Hafta görünümü gelene kadar hiçbir ekranda görünmez (Odak yalnızca bugün + gecikenleri gösterir).

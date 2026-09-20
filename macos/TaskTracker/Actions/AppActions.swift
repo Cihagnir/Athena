@@ -6,7 +6,7 @@ import SwiftUI
 /// bağlamı) ve Ayarlar'da görünür, global kısayol atanabilir olur.
 enum AppActions {
     static func all(for app: AppState) -> [AppAction] {
-        global(app) + mainWindow(app) + anyView(app) + todayList(app) + miniPanel(app) + listPanel(app) + quickAddDocs
+        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + miniPanel(app) + listPanel(app) + quickAddDocs
     }
 
     private static func global(_ app: AppState) -> [AppAction] {
@@ -129,6 +129,26 @@ enum AppActions {
             AppAction(id: "today.area", title: "Alan filtresi: hepsi → iş → kişisel", context: .todayList,
                       keys: [KeyBinding(key: .tab, display: "⇥")]) {
                 today.cycleArea()
+            },
+        ]
+    }
+
+    private static func triage(_ app: AppState) -> [AppAction] {
+        let store = app.triage
+        func action(_ id: String, _ title: String, _ key: KeyEquivalent, _ display: String, _ perform: @escaping () -> Void) -> AppAction {
+            AppAction(id: "triage." + id, title: title, context: .triage,
+                      keys: [KeyBinding(key: key, display: display)], showsInPalette: false, perform: perform)
+        }
+        return [
+            action("tomorrow", "Yarına at", "1", "1") { if store.mode == .choose { store.postponeToTomorrow() } },
+            action("date", "Tarih seç", "2", "2") { if store.mode == .choose { store.begin(.date) } },
+            action("project", "Projeye taşı (yoksa oluşturur)", "3", "3") { if store.mode == .choose { store.begin(.project) } },
+            action("delete", "Sil (↵ ile onaylanır)", "4", "4") { if store.mode == .choose { store.begin(.confirmDelete) } },
+            action("done", "Tamamlandı say", "d", "D") { if store.mode == .choose { store.markDone() } },
+            action("skip", "Atla", .space, "␣") { store.skip() },
+            action("confirm", "Silmeyi onayla", .return, "↵") { store.delete() },
+            action("escape", "Vazgeç / Odak'a dön", .escape, "esc") { [weak app] in
+                if store.mode == .choose { app?.route = .today } else { store.cancel() }
             },
         ]
     }

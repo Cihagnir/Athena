@@ -140,6 +140,30 @@ struct LiveAPITests {
         try await api.deleteTask(id)
     }
 
+    @Test func triageWithDateAndNewProject() async throws {
+        let api = try await client()
+        let today = try await api.focusView().today
+
+        #expect(try await api.resolveDate("bugün") == today)
+        #expect(try await api.resolveDate("  yarın ") != nil)
+        #expect(try await api.resolveDate("birgün") == nil)
+        #expect(try await api.resolveDate("yarın !1") == nil)
+        #expect(try await api.resolveDate("") == nil)
+
+        let project = try await api.createProject(name: "zz-swift-proje", area: .work)
+        #expect(try await api.projects().contains { $0.id == project.id })
+
+        let id = try await api.quickAdd(text: "zz-swift triyaj").task.id
+        try await api.triage(id, .date("2027-03-01"))
+        #expect(try await api.focusView().tasks.contains { $0.id == id } == false)
+        try await api.triage(id, .toProject(id: project.id, date: nil))
+        let moved = try await api.updateTask(id, TaskPatch())
+        #expect(moved.project == project.id && moved.area == .work && moved.scheduledDate.isEmpty)
+
+        try await api.triage(id, .delete)
+        try await api.deleteProject(project.id)
+    }
+
     @Test func realtimeDeliversTaskEvents() async throws {
         let api = try await client()
         let (connected, signal) = AsyncStream<Void>.makeStream()

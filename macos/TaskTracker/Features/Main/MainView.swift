@@ -65,6 +65,7 @@ struct MainView: View {
     @ViewBuilder private var content: some View {
         switch app.route {
         case .today: TodayView()
+        case .triage: TriageView()
         case .settings: SettingsView().keyboardFocus(unless: app.overlay != nil)
         default:
             Text("\(app.route.title.lowercased()) · yakında").foregroundStyle(Theme.ink3)
@@ -104,7 +105,7 @@ private struct Sidebar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(Route.views.enumerated()), id: \.element) { index, route in
-                row(route, key: "⌘\(index + 1)", count: route == .today ? app.today.open.count : nil)
+                row(route, key: "⌘\(index + 1)", count: count(for: route))
             }
             Spacer()
             row(.settings, key: "⌘,", count: nil)
@@ -112,6 +113,15 @@ private struct Sidebar: View {
         .padding(.top, 44)
         .padding(.bottom, 24)
         .frame(width: 220)
+    }
+
+    /// ODAK: açık task'lar · TRİYAJ: başlama günü geçmiş olanlar.
+    private func count(for route: Route) -> Int? {
+        switch route {
+        case .today: app.today.open.count
+        case .triage: app.today.overdue.count
+        default: nil
+        }
     }
 
     private func row(_ route: Route, key: String, count: Int?) -> some View {

@@ -63,6 +63,24 @@ public struct APIClient: Sendable {
         return page.items
     }
 
+    public func createProject(name: String, area: Area) async throws -> Project {
+        try await send("POST", "/api/collections/projects/records",
+                       body: ["name": name, "area": area.rawValue, "status": "active"])
+    }
+
+    public func deleteProject(_ id: String) async throws {
+        try await sendIgnoringBody("DELETE", "/api/collections/projects/records/\(id)")
+    }
+
+    /// Serbest metni hızlı eklemenin tarih sözlüğüyle çözer ("cuma", "yarın", "25.09").
+    /// Metnin tamamı tek bir tarih değilse `nil`.
+    public func resolveDate(_ text: String) async throws -> String? {
+        let word = text.trimmingCharacters(in: .whitespaces)
+        guard !word.isEmpty, !word.contains(" ") else { return nil }
+        let parsed = try await quickAddPreview(text: "x " + word)
+        return parsed.title == "x" ? parsed.scheduledDate : nil
+    }
+
     // MARK: Hızlı ekleme
 
     public func quickAddPreview(text: String) async throws -> ParsedInput {

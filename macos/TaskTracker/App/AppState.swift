@@ -22,10 +22,16 @@ enum Route: String, CaseIterable, Identifiable {
 
     /// Kenar çubuğundaki ⌘1…⌘6 görünümleri (Ayarlar ayrı durur: ⌘,).
     static let views: [Route] = [.today, .triage, .week, .kanban, .projects, .notes]
-    var isImplemented: Bool { self == .today || self == .settings }
+    var isImplemented: Bool { [.today, .triage, .settings].contains(self) }
 
     /// Görünümün kendi tuş bağlamı (`?` yardımında ilk sırada gösterilir).
-    var context: ActionContext? { self == .today ? .todayList : nil }
+    var context: ActionContext? {
+        switch self {
+        case .today: .todayList
+        case .triage: .triage
+        default: nil
+        }
+    }
 }
 
 /// Ana pencerenin üstüne açılan, klavyeyi devralan katmanlar.
@@ -45,6 +51,7 @@ final class AppState {
     let today: TodayStore
     let projects: ProjectStore
     let active: ActiveTaskStore
+    let triage: TriageStore
     let quickAdd: QuickAddController
     let panel: PanelController
 
@@ -63,6 +70,7 @@ final class AppState {
         today = TodayStore(backend: backend)
         projects = ProjectStore(backend: backend)
         active = ActiveTaskStore(backend: backend)
+        triage = TriageStore(backend: backend, projects: projects)
         quickAdd = QuickAddController(backend: backend)
         panel = PanelController(settings: settings, active: active, today: today)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
@@ -144,6 +152,7 @@ final class AppState {
 
     /// Yalnızca DEBUG: ekranları klavyesiz doğrulamak için (macos/README.md → Doğrulama).
     ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help   TT_DEBUG_DETAILS=1
+    ///   TT_DEBUG_TRIAGE=choose|date|project
     ///   TT_DEBUG_PANEL=listen|expanded|timer|list   (yüzen panelin halleri)
     ///   TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma // not"
     private func applyDebugLaunchOptions() {
@@ -151,6 +160,14 @@ final class AppState {
         let env = ProcessInfo.processInfo.environment
         if let route = env["TT_DEBUG_ROUTE"].flatMap(Route.init(rawValue:)) { self.route = route }
         if env["TT_DEBUG_DETAILS"] != nil { today.showsDetails = true }
+        if let mode = env["TT_DEBUG_TRIAGE"] {
+            route = .triage
+            Task { [triage] in
+                try? await Task.sleep(for: .seconds(2))
+                if mode == "date" { triage.begin(.date); triage.dateInput = "cuma" }
+                if mode == "project" { triage.begin(.project); triage.projectQuery = "Ev işleri" }
+            }
+        }
         if let mode = env["TT_DEBUG_PANEL"] {
             panel.debugForce(mode)
         }
@@ -202,6 +219,7 @@ final class AppState {
                     switch event.topic {
                     case "tasks":
                         today.scheduleReload()
+                        if route == .triage { await triage.refresh() }
                         if event.recordID == active.taskID { await active.reload() }
                     case "projects":
                         await projects.reload()

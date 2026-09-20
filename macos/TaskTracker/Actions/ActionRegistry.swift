@@ -12,6 +12,8 @@ enum ActionContext: String, CaseIterable {
     case anyView
     /// Odak listesi klavyeyi dinlerken — modifier'sız tek tuşlar.
     case todayList
+    /// Triyaj görünümü.
+    case triage
     /// Yüzen mini panel klavyeyi dinlerken.
     case miniPanel
     /// Yüzen liste paneli; ayrıca `.todayList` aksiyonlarının hepsi burada da geçerlidir.
@@ -25,6 +27,7 @@ enum ActionContext: String, CaseIterable {
         case .mainWindow: "ANA PENCERE"
         case .anyView: "HER GÖRÜNÜM"
         case .todayList: "ODAK LİSTESİ"
+        case .triage: "TRİYAJ"
         case .miniPanel: "MİNİ PANEL"
         case .listPanel: "LİSTE PANELİ (+ odak listesi tuşları)"
         case .quickAdd: "HIZLI EKLEME"
