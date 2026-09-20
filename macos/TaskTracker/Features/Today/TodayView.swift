@@ -15,7 +15,7 @@ struct TodayView: View {
             InkRule()
             list(store)
             InkRule()
-            InkHints("↑↓ gezin · ↵ aktif yap · D tamamla · Y yarına · 1–4 öncelik · ⇥ alan · ? tümü · ⌘K komut")
+            InkHints("↑↓ gezin · E detay · ↵ aktif yap · D tamamla · Y yarına · 1–4 öncelik · ⇥ alan · ? tümü · ⌘K komut")
                 .padding(.horizontal, 32).padding(.vertical, 8)
         }
         // Sıra önemli: tuşlar odaktaki görünüme ve onun üstündekilere gider; dinleyici
@@ -94,9 +94,62 @@ struct TodayView: View {
                             isSelected: task.id == store.selectedID,
                             isActive: task.id == app.active.taskID)
                         .id(task.id)
+                        .onTapGesture(count: 2) { store.selectedID = task.id; store.toggleDetails() }
                         .onTapGesture { store.selectedID = task.id }
+                    if store.showsDetails && task.id == store.selectedID {
+                        TaskDetails(task: task, today: store.today, projectName: app.projects.name(for: task.project))
+                    }
                 }
             }
+        }
+    }
+}
+
+/// Seçili satırın altında açılan detay: açıklama + tüm alanlar. Satırdaki kısaltmaların
+/// (≡, son 25.09, kş) açık hali burada okunur.
+struct TaskDetails: View {
+    let task: TaskItem
+    let today: String
+    let projectName: String?
+
+    private var statusText: String {
+        switch task.status {
+        case .todo: "[ ] yapılacak"
+        case .doing: "[~] yapılıyor"
+        case .blocked: "[!] engellendi"
+        case .done: "[x] tamamlandı"
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(task.title).font(Theme.font(bold: true)).fixedSize(horizontal: false, vertical: true)
+            if task.hasDetails {
+                Text(task.details).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            } else {
+                Text("açıklama yok").foregroundStyle(Theme.ink3)
+            }
+            InkRule()
+            VStack(alignment: .leading, spacing: 2) {
+                field("durum", statusText)
+                field("öncelik", "!\(task.priority)")
+                field("başla", task.scheduledDate.isEmpty ? "plansız" : Day.label(task.scheduledDate) + (task.scheduledDate < today && !task.isDone ? " · gecikti" : ""))
+                field("son", task.dueDate.isEmpty ? "–" : Day.label(task.dueDate) + (task.dueDate <= today && !task.isDone ? " · bitiş geldi" : ""))
+                field("proje", projectName.map { "#" + $0 } ?? "–")
+                field("alan", task.area.map { $0 == .work ? "iş" : "kişisel" } ?? "–")
+            }
+        }
+        .frame(maxWidth: 640, alignment: .leading)
+        .padding(.leading, 32 + 8 + 12 + 24 + 12 + 16 + 12)  // başlık sütunuyla hizalı
+        .padding(.trailing, 32)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func field(_ name: String, _ value: String) -> some View {
+        HStack(spacing: 12) {
+            Text(name).foregroundStyle(Theme.ink2).frame(width: 64, alignment: .leading)
+            Text(value)
         }
     }
 }

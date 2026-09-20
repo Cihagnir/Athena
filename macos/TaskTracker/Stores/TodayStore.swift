@@ -17,6 +17,8 @@ final class TodayStore {
     /// `nil` = hepsi
     private(set) var areaFilter: Area?
     var selectedID: String?
+    /// Açıkken seçili satırın altında detay bölümü görünür ve imleçle birlikte gezer.
+    var showsDetails = false
 
     init(backend: Backend) {
         self.backend = backend
@@ -62,10 +64,16 @@ final class TodayStore {
         done = []
         today = ""
         selectedID = nil
+        showsDetails = false
         hasLoaded = false
     }
 
     // MARK: Aksiyonlar (ActionRegistry üzerinden çağrılır)
+
+    func toggleDetails() {
+        guard selected != nil else { return }
+        showsDetails.toggle()
+    }
 
     func moveSelection(_ delta: Int) {
         let rows = ordered

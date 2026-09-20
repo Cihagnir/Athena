@@ -45,6 +45,16 @@ enum AppActions {
                       keys: [KeyBinding(key: "f", modifiers: [.control, .command], display: "⌃⌘F")]) { [weak app] in
                 app?.toggleFullScreen()
             },
+            // ⌘M ve ⌘W'yi sistemin Pencere menüsü yakalar; burada palette/yardımda görünsünler
+            // ve pencere düğmeleriyle aynı işi yapsınlar diye kayıtlıdır.
+            AppAction(id: "window.minimize", title: "Pencereyi küçült (Dock'a)", context: .mainWindow,
+                      keys: [KeyBinding(key: "m", modifiers: .command, display: "⌘M")]) { [weak app] in
+                app?.minimizeWindow()
+            },
+            AppAction(id: "window.close", title: "Pencereyi kapat (uygulama arka planda kalır)", context: .mainWindow,
+                      keys: [KeyBinding(key: "w", modifiers: .command, display: "⌘W")]) { [weak app] in
+                app?.mainWindow?.performClose(nil)
+            },
             AppAction(id: "task.new", title: "Yeni task (hızlı ekleme paneli)", context: .mainWindow,
                       keys: [KeyBinding(key: "n", modifiers: .command, display: "⌘N")]) { [weak app] in
                 app?.quickAdd.show()
@@ -84,6 +94,14 @@ enum AppActions {
                       keys: [KeyBinding(key: .return, display: "↵")]) { [weak app] in
                 guard let app, let task = app.today.selected else { return }
                 app.active.toggle(task)
+            },
+            AppAction(id: "today.details", title: "Detayı aç / kapat", context: .todayList,
+                      keys: [KeyBinding(key: "e", display: "E")]) {
+                today.toggleDetails()
+            },
+            AppAction(id: "today.details.close", title: "Detayı kapat", context: .todayList,
+                      keys: [KeyBinding(key: .escape, display: "esc")], showsInPalette: false) {
+                today.showsDetails = false
             },
             AppAction(id: "today.done", title: "Tamamla / geri al", context: .todayList,
                       keys: [KeyBinding(key: "d", display: "D")]) {

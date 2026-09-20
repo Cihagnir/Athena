@@ -37,8 +37,10 @@ open build/Build/Products/Debug/TaskTracker.app
 | Ana pencere | `⌘N` | Hızlı ekleme paneli |
 | Ana pencere | `⌘K` | Komut paleti: her aksiyon adıyla aranır, `↑↓` seç, `↵` çalıştır, `esc` kapat |
 | Ana pencere | `?` | O ekranın kısayol listesi (`?` ya da `esc` kapatır; metin alanı odaktayken çalışmaz) |
+| Ana pencere | `⌘M` / `⌘W` | Küçült (Dock'a) / kapat (uygulama arka planda kalır) |
 | Ana pencere | `⌃⌘F` | Tam ekran aç / kapat (durum hatırlanır; bir sonraki açılış aynı halde başlar) |
 | Odak listesi | `↑` `↓` / `J` `K` | Gezin |
+| Odak listesi | `E` | Seçili task'ın detayını aç / kapat (açıklama + tüm alanlar); açıkken imleçle birlikte gezer. `esc` kapatır, çift tık da açar |
 | Odak listesi | `↵` | Aktif task yap / bırak (`▸`) |
 | Odak listesi | `D` | Tamamla / geri al |
 | Odak listesi | `Y` | Yarına at |
@@ -48,6 +50,8 @@ open build/Build/Products/Debug/TaskTracker.app
 | Hızlı ekleme | `⇥` | Çok satırlı açıklama alanı ↔ başlık |
 | Hızlı ekleme | `⇧↵` | Açıklamada yeni satır |
 | Hızlı ekleme | `esc` | Kapat |
+
+**Pencere düğmeleri:** sol üstte `✕ – □` — kapat, küçült, tam ekran (sistemin renkli düğmelerinin monokrom karşılığı; her ekranda, giriş dahil). Tam ekrandayken `–` önce tam ekrandan çıkarır (macOS tam ekran pencereyi küçültemez).
 
 **Menü çubuğu öğesi:** `▸ 3/7` — `▸` aktif task varsa görünür, `3/7` bugün biten / toplam; giriş yapılmamışsa `–`. Menüsünde aktif task, hızlı ekleme, ana pencere, ayarlar ve çıkış vardır. **Ayarlar → Başlangıç**'tan gizlenebilir; aynı yerde "oturum açılışında başlat" anahtarı bulunur (oturum açılışıyla başlayınca pencere açılmaz, uygulama arka planda bekler).
 
@@ -191,7 +195,7 @@ Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etme
 
 ```sh
 TT_DEBUG_ROUTE=settings \
-TT_DEBUG_OVERLAY=palette \
+TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 \
 TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma !1 // kısa not" \
   build/Build/Products/Debug/TaskTracker.app/Contents/MacOS/TaskTracker
 ```
@@ -214,7 +218,7 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 | Pencere köşeleri yuvarlak | **sapma** | macOS başlıklı pencerelerde köşeyi sistem çizer. Kare köşe için ana pencereyi de çerçevesiz `NSWindow`'a çevirmek gerekir (boyutlandırma/taşıma elle yazılır) — ertelendi. Hızlı ekleme paneli çerçevesiz olduğu için kare. |
 | Blok imleç `█` yok | **sapma** | `NSTextView`'ın ekleme imleci artık sistem bileşeni; özelleştirmek kırılgan. İmleç `ink` renginde ince çizgi. |
 | Kısayol kaydedici kutusu | **sapma** | `KeyboardShortcuts.Recorder` paketin kendi (yuvarlak, İngilizce "Record Shortcut") bileşeni. Tema içi bir kaydedici adım 2'de yazılabilir. |
-| Pencere düğmeleri gizli | karar | Renkli trafik ışıkları monokromu bozuyor. `⌘W` / `⌘M` / `⌘Q` / `⌃⌘F` çalışır; pencere arka plandan sürüklenir. |
+| Pencere düğmeleri | karar | Sistemin renkli trafik ışıkları monokromu bozduğu için gizli; yerlerine `✕ – □` glif düğmeleri var (`WindowControls`, `MainView.swift`). Pencere arka plandan sürüklenir. |
 | Tam ekran geçiş animasyonu | sistem | macOS'in kendi tam ekranı (ayrı masaüstü) kullanılıyor; geçiş animasyonu sisteme ait, "hareket yok" ilkesinin dışında kalıyor. |
 | Menü çubuğu menüsü | sistem | Menü çubuğu ve açılan menü macOS'in kendi bileşeni; yazı tipi/renk oraya taşınamaz. Etiket yalnızca metin (`▸ 3/7`), ikon yok. |
 | Oturum açılışında gizli başlama | **doğrulanmadı** | `LoginItem.launchedAtLogin` Apple Event'e bakıyor; gerçek bir oturum açılışıyla denenmedi. Yanlış çalışırsa tek etkisi pencerenin açılışta görünmesi olur. |
@@ -224,4 +228,5 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 - **Adım 3:** yüzen paneller — mini panel (6 hal) ve onun yerini alan liste paneli, zamanlayıcı çubuğu + süre dolunca ses/bildirim.
 - **Adım 4:** Triyaj → Hafta → Kanban → Projeler → Notlar.
-- Odak listesinde eksik kalanlar: `⌘↑/⌘↓` ile sıralama, `/` filtre, task detayını görme/düzenleme (`E`), task'a not düşme (`N`).
+- Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).
+- Bilinen boşluk: yarına ya da ileriye planlı task'lar Hafta görünümü gelene kadar hiçbir ekranda görünmez (Odak yalnızca bugün + gecikenleri gösterir).

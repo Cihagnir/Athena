@@ -20,6 +20,7 @@ struct RootView: View {
         .foregroundStyle(Theme.ink)
         .background(Theme.paper)
         .overlay(Rectangle().strokeBorder(Theme.ink, lineWidth: Theme.hairline))
+        .overlay(alignment: .topLeading) { WindowControls().padding(.leading, 20).padding(.top, 14) }
         .background(WindowConfigurator(app: app))
         .ignoresSafeArea()
         .onAppear {
@@ -70,6 +71,30 @@ struct MainView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .keyboardFocus(unless: app.overlay != nil)
         }
+    }
+}
+
+/// Sistemin renkli pencere düğmelerinin monokrom karşılığı: kapat · küçült · tam ekran.
+/// Her ekranda (giriş dahil) sol üstte durur.
+private struct WindowControls: View {
+    @Environment(AppState.self) private var app
+
+    var body: some View {
+        HStack(spacing: 14) {
+            control("✕", help: "Kapat — uygulama arka planda kalır (⌘W)") { app.mainWindow?.performClose(nil) }
+            control("–", help: "Küçült; tam ekrandaysa önce tam ekrandan çıkar (⌘M)") { app.minimizeWindow() }
+            control("□", help: "Tam ekran aç / kapat (⌃⌘F)") { app.toggleFullScreen() }
+        }
+    }
+
+    private func control(_ glyph: String, help: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(glyph).font(Theme.font(bold: true)).foregroundStyle(Theme.ink2)
+                .frame(width: 16, height: 16).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .help(help)
     }
 }
 

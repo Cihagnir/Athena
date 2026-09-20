@@ -139,12 +139,13 @@ final class AppState {
     }
 
     /// Yalnızca DEBUG: ekranları klavyesiz doğrulamak için (macos/README.md → Doğrulama).
-    ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help
+    ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help   TT_DEBUG_DETAILS=1
     ///   TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma // not"
     private func applyDebugLaunchOptions() {
         #if DEBUG
         let env = ProcessInfo.processInfo.environment
         if let route = env["TT_DEBUG_ROUTE"].flatMap(Route.init(rawValue:)) { self.route = route }
+        if env["TT_DEBUG_DETAILS"] != nil { today.showsDetails = true }
         switch env["TT_DEBUG_OVERLAY"] {
         case "palette": overlay = .palette
         case "help": overlay = .help
@@ -213,6 +214,18 @@ final class AppState {
     }
 
     // MARK: Pencere
+
+    var isFullScreen: Bool { mainWindow?.styleMask.contains(.fullScreen) ?? false }
+
+    /// Tam ekrandayken pencere küçültülemez; önce tam ekrandan çıkılır.
+    func minimizeWindow() {
+        guard let window = mainWindow else { return }
+        if window.styleMask.contains(.fullScreen) {
+            window.toggleFullScreen(nil)
+        } else {
+            window.miniaturize(nil)
+        }
+    }
 
     func toggleFullScreen() {
         showMainWindow()

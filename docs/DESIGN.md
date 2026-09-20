@@ -71,6 +71,8 @@ Renk olmadığı için her anlamın sabit bir biçimi vardır:
 - **Hızlı eklemede açıklama:** kısa not satır içinde `// …`; `Tab` başlığın altında çok satırlı açıklama alanını açar (`Shift+Enter` yeni satır, `Tab` başlığa döner, `Enter` her iki alandan da ekler).
 - **Kısayol ipuçları:** ekranın altında tek satır `ink2`: `D tamamla · T süre · E detay · ? tümü`.
 - **Onay geri bildirimi:** tek karelik ters çevirme "flaşı" (e-ink'in tam yenilemesine gönderme) — temadaki tek "hareket"; ayarlardan kapatılabilir.
+- **Pencere düğmeleri:** sistemin renkli üçlüsü gizlenir; sol üstte `ink2` gliflerle `✕ – □` (kapat · küçült · tam ekran).
+- **Task detayı:** seçili satırın altında, başlık sütunuyla hizalı açılır: **bold** başlık, açıklama, 1 px çizgi, sonra `ad  değer` satırları (durum, öncelik, başla, son, proje, alan). Ayrı pencere ya da yan panel yok.
 - **Simge:** uygulama, menü çubuğu ve dock simgeleri de tek renk, düz, glif tabanlı. SF Symbols kullanılmaz; gerekirse Unicode glif (`▸ ✕ ░ █ ↑ ↓`).
 
 ## Yerleşim
