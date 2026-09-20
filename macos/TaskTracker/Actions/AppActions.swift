@@ -6,7 +6,7 @@ import SwiftUI
 /// bağlamı) ve Ayarlar'da görünür, global kısayol atanabilir olur.
 enum AppActions {
     static func all(for app: AppState) -> [AppAction] {
-        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + week(app) + miniPanel(app) + listPanel(app) + quickAddDocs
+        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + week(app) + kanban(app) + miniPanel(app) + listPanel(app) + quickAddDocs
     }
 
     private static func global(_ app: AppState) -> [AppAction] {
@@ -174,6 +174,28 @@ enum AppActions {
             action("previous", "Önceki hafta (bu haftadan geriye gidilmez)", [KeyBinding(key: ",", display: ",")]) { store.shiftWeek(-1) },
             action("current", "Bu haftaya dön", [KeyBinding(key: "0", display: "0")]) { store.showCurrentWeek() },
             action("escape", "Detayı kapat", [KeyBinding(key: .escape, display: "esc")]) { store.showsDetails = false },
+        ]
+    }
+
+    private static func kanban(_ app: AppState) -> [AppAction] {
+        let store = app.kanban
+        func action(_ id: String, _ title: String, _ keys: [KeyBinding], _ perform: @escaping () -> Void) -> AppAction {
+            AppAction(id: "kanban." + id, title: title, context: .kanban, keys: keys, showsInPalette: false, perform: perform)
+        }
+        return [
+            action("down", "Aşağı", [KeyBinding(key: .downArrow, display: "↓"), KeyBinding(key: "j", display: "J")]) { store.moveSelection(1) },
+            action("up", "Yukarı", [KeyBinding(key: .upArrow, display: "↑"), KeyBinding(key: "k", display: "K")]) { store.moveSelection(-1) },
+            action("right", "Sağdaki sütun", [KeyBinding(key: .rightArrow, display: "→"), KeyBinding(key: "l", display: "L")]) { store.moveColumn(1) },
+            action("left", "Soldaki sütun", [KeyBinding(key: .leftArrow, display: "←"), KeyBinding(key: "h", display: "H")]) { store.moveColumn(-1) },
+            action("forward", "Kartı sonraki duruma taşı", [KeyBinding(key: .rightArrow, modifiers: .shift, display: "⇧→")]) { store.shiftStatus(1) },
+            action("back", "Kartı önceki duruma taşı", [KeyBinding(key: .leftArrow, modifiers: .shift, display: "⇧←")]) { store.shiftStatus(-1) },
+            action("done", "Tamamla / geri al", [KeyBinding(key: "d", display: "D")]) { store.toggleDone() },
+            action("details", "Açıklamayı aç / kapat", [KeyBinding(key: "e", display: "E")]) { store.toggleDetails() },
+            action("activate", "Aktif task yap / bırak", [KeyBinding(key: .return, display: "↵")]) { [weak app] in
+                guard let app, let task = app.kanban.selected else { return }
+                app.active.toggle(task)
+            },
+            action("escape", "Açıklamayı kapat", [KeyBinding(key: .escape, display: "esc")]) { store.showsDetails = false },
         ]
     }
 

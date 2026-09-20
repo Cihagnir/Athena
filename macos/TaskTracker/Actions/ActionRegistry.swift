@@ -16,6 +16,8 @@ enum ActionContext: String, CaseIterable {
     case triage
     /// Hafta görünümü.
     case week
+    /// Kanban görünümü.
+    case kanban
     /// Yüzen mini panel klavyeyi dinlerken.
     case miniPanel
     /// Yüzen liste paneli; ayrıca `.todayList` aksiyonlarının hepsi burada da geçerlidir.
@@ -31,6 +33,7 @@ enum ActionContext: String, CaseIterable {
         case .todayList: "ODAK LİSTESİ"
         case .triage: "TRİYAJ"
         case .week: "HAFTA"
+        case .kanban: "KANBAN"
         case .miniPanel: "MİNİ PANEL"
         case .listPanel: "LİSTE PANELİ (+ odak listesi tuşları)"
         case .quickAdd: "HIZLI EKLEME"
@@ -45,11 +48,14 @@ struct KeyBinding {
     let display: String
 
     private static let compared: EventModifiers = [.command, .option, .control]
+    private static let arrows: [KeyEquivalent] = [.leftArrow, .rightArrow, .upArrow, .downArrow]
 
+    /// Shift yalnızca ok tuşlarında ayırt edilir (`→` ≠ `⇧→`). Karakter tuşlarında
+    /// yok sayılır: `?` zaten Shift'le üretilir, `D` büyük/küçük aynı aksiyondur.
     func matches(_ press: KeyPress) -> Bool {
         let pressed = Character(press.key.character.lowercased())
-        return pressed == key.character
-            && press.modifiers.intersection(Self.compared) == modifiers.intersection(Self.compared)
+        let mask = Self.arrows.contains(key) ? Self.compared.union(.shift) : Self.compared
+        return pressed == key.character && press.modifiers.intersection(mask) == modifiers.intersection(mask)
     }
 }
 

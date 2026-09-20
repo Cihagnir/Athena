@@ -67,6 +67,7 @@ struct MainView: View {
         case .today: TodayView()
         case .triage: TriageView()
         case .week: WeekScreen()
+        case .kanban: KanbanView()
         case .settings: SettingsView().keyboardFocus(unless: app.overlay != nil)
         default:
             Text("\(app.route.title.lowercased()) · yakında").foregroundStyle(Theme.ink3)

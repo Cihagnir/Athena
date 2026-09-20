@@ -62,6 +62,13 @@ public struct APIClient: Sendable {
         try await send("GET", "/api/views/week", query: start.map { ["start": $0] } ?? [:])
     }
 
+    /// Bitmemiş bütün task'lar — tarihli ya da plansız (Kanban ve Projeler için).
+    public func openTasks() async throws -> [TaskItem] {
+        let page: Page<TaskItem> = try await send("GET", "/api/collections/tasks/records",
+                                                  query: ["perPage": "500", "sort": "sort_order", "filter": "status != 'done'"])
+        return page.items
+    }
+
     public func projects() async throws -> [Project] {
         let page: Page<Project> = try await send("GET", "/api/collections/projects/records",
                                                  query: ["perPage": "500", "sort": "name"])

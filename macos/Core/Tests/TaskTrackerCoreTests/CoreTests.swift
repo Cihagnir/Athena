@@ -166,6 +166,23 @@ struct LiveAPITests {
         try await api.deleteTask(id)
     }
 
+    @Test func openTasksIncludesUnscheduledButNotDone() async throws {
+        let api = try await client()
+        let project = try await api.createProject(name: "zz-swift-kanban", area: .personal)
+        let id = try await api.quickAdd(text: "zz-swift plansız #zz-swift-kanban").task.id
+
+        var open = try await api.openTasks()
+        #expect(open.first { $0.id == id }?.scheduledDate == "")
+        _ = try await api.updateTask(id, TaskPatch(status: .blocked))
+        open = try await api.openTasks()
+        #expect(open.first { $0.id == id }?.status == .blocked)
+        _ = try await api.updateTask(id, TaskPatch(status: .done))
+        #expect(try await api.openTasks().contains { $0.id == id } == false)
+
+        try await api.deleteTask(id)
+        try await api.deleteProject(project.id)
+    }
+
     @Test func triageWithDateAndNewProject() async throws {
         let api = try await client()
         let today = try await api.focusView().today

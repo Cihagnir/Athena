@@ -22,7 +22,7 @@ enum Route: String, CaseIterable, Identifiable {
 
     /// Kenar çubuğundaki ⌘1…⌘6 görünümleri (Ayarlar ayrı durur: ⌘,).
     static let views: [Route] = [.today, .triage, .week, .kanban, .projects, .notes]
-    var isImplemented: Bool { [.today, .triage, .week, .settings].contains(self) }
+    var isImplemented: Bool { [.today, .triage, .week, .kanban, .settings].contains(self) }
 
     /// Görünümün kendi tuş bağlamı (`?` yardımında ilk sırada gösterilir).
     var context: ActionContext? {
@@ -30,6 +30,7 @@ enum Route: String, CaseIterable, Identifiable {
         case .today: .todayList
         case .triage: .triage
         case .week: .week
+        case .kanban: .kanban
         default: nil
         }
     }
@@ -54,6 +55,7 @@ final class AppState {
     let active: ActiveTaskStore
     let triage: TriageStore
     let week: WeekStore
+    let kanban: KanbanStore
     let quickAdd: QuickAddController
     let panel: PanelController
 
@@ -74,6 +76,7 @@ final class AppState {
         active = ActiveTaskStore(backend: backend)
         triage = TriageStore(backend: backend, projects: projects)
         week = WeekStore(backend: backend)
+        kanban = KanbanStore(backend: backend)
         quickAdd = QuickAddController(backend: backend)
         panel = PanelController(settings: settings, active: active, today: today)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
@@ -194,6 +197,7 @@ final class AppState {
         backend.lastError = message
         today.reset()
         week.reset()
+        kanban.reset()
         active.reset()
         quickAdd.hide()
         panel.hide()
@@ -225,6 +229,7 @@ final class AppState {
                         today.scheduleReload()
                         if route == .triage { await triage.refresh() }
                         if route == .week { week.scheduleReload() }
+                        if route == .kanban { kanban.scheduleReload() }
                         if event.recordID == active.taskID { await active.reload() }
                     case "projects":
                         await projects.reload()

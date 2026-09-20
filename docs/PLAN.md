@@ -161,7 +161,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 1. ✅ *(2026-09-20)* Proje iskeleti (XcodeGen) + `Theme` (DESIGN.md belirteçleri) + API istemcisi + giriş + `ActionRegistry` + Odak ekranı + hızlı ekleme paneli + Ayarlar (sunucu adresi, görünüm, kısayol listesi) → **gerçek kullanıma geçiş noktası**. Uygulama belgesi: [../macos/README.md](../macos/README.md)
 2. ✅ *(2026-09-20)* Menü çubuğu öğesi + login item + kısayol ayarları + `⌘K` komut paleti + `?` yardım + tam ekran (`⌃⌘F`)
 3. ✅ *(2026-09-20)* Yüzen paneller (mini → liste) + aktif task + zamanlayıcı çubuğu (`N` not düşme hariç — ertelendi)
-4. Triyaj ✅ → Hafta ✅ *(2026-09-20)* → Kanban → Projeler → Notlar
+4. Triyaj ✅ → Hafta ✅ → Kanban ✅ *(2026-09-20)* → Projeler → Notlar
 
 **Çalışma biçimi:** her adım sonunda uygulama kullanılır durumda teslim edilir; kullanıcı gerçek kullanımdan yeni akış/kısayol/tasarım istekleriyle gelir, bunlar bir sonraki adıma girmeden önce işlenir. Görsel dilin ilkeleri [DESIGN.md](DESIGN.md)'de sabit ("E-ink"); tonlar, ölçüler ve yerleşim 1. adımda oradaki varsayılanlarla başlar, kullanım sırasında birlikte ayarlanır.
 

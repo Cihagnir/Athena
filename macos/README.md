@@ -6,7 +6,7 @@ task_tracker'ın macOS uygulaması: Swift 6 + SwiftUI (gerektiği yerde AppKit),
 - Görsel dil (her ekranın uyduğu kurallar): [../docs/DESIGN.md](../docs/DESIGN.md)
 - Yol haritası: [../docs/PLAN.md](../docs/PLAN.md) → Faz 2
 
-**Durum:** Faz 2 / adım 1–3 + adım 4'ten **Triyaj ve Hafta** tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
+**Durum:** Faz 2 / adım 1–3 + adım 4'ten **Triyaj, Hafta ve Kanban** tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
 
 ---
 
@@ -69,6 +69,9 @@ open build/Build/Products/Debug/TaskTracker.app
 | Hafta | `B` | Task'ı bugüne al |
 | Hafta | `D` · `E` · `↵` | Tamamla / geri al · detay · aktif yap |
 | Hafta | `.` `,` `0` | Sonraki hafta · önceki hafta (bu haftadan geriye gidilmez) · bu haftaya dön |
+| Kanban | `↑↓` `←` `→` / `J K H L` | Kartlar ve sütunlar arasında gezin (boş sütun atlanır) |
+| Kanban | `⇧←` `⇧→` | Kartı önceki / sonraki duruma taşı: yapılacak ↔ yapılıyor ↔ engelli ↔ bitti. Fareyle sürükle-bırak da çalışır |
+| Kanban | `D` · `E` · `↵` | Tamamla / geri al · açıklamayı aç · aktif yap |
 | Hızlı ekleme | `↵` | Ekle (panel açık kalır) |
 | Hızlı ekleme | `⇥` | Çok satırlı açıklama alanı ↔ başlık |
 | Hızlı ekleme | `⇧↵` | Açıklamada yeni satır |
@@ -112,10 +115,11 @@ TaskTracker/               uygulama hedefi
     TodayStore.swift       Odak ekranının durumu ve aksiyonları
     TriageStore.swift      Triyaj kuyruğu, karar modları (tarih / proje / silme onayı)
     WeekStore.swift        Hafta görünümü: 7 gün + gecikenler, gün taşıma, haftalar arası gezinme
+    KanbanStore.swift      Kanban: durum sütunları, kart/sütun gezinme, durum taşıma
     SupportingStores.swift ProjectStore (adlar), ActiveTaskStore (aktif task + zamanlayıcı)
     InkTextView.swift      token vurgulu metin alanı (NSTextView); hızlı ekleme ve palet kullanır
   Features/
-    Login/ Main/ Today/ Triage/ Week/ QuickAdd/ Settings/
+    Login/ Main/ Today/ Triage/ Week/ Kanban/ QuickAdd/ Settings/
     Overlays/              PaletteView (⌘K), HelpView (?) — ana pencerenin üstüne açılan katmanlar
     Panel/                 PanelController (durum + pencere), PanelView (mini ve liste içerikleri)
     MenuBar/               MenuBarMenu — menü çubuğu öğesinin menüsü
@@ -183,6 +187,13 @@ Kuyruk `GET /api/views/focus`'tur (alan filtresiz): bugüne ya da öncesine plan
 - Gün taşıma `PATCH scheduled_date` ile yapılır (`WeekStore.shiftDay`); gün aritmetiği `Day.adding` (Core), "bugün" yine sunucunun `today` alanı. Geçmişe taşıma engellidir.
 - `TaskRow` ve `TaskDetails` Odak ekranıyla ortaktır. Görünümün adı `WeekScreen`'dir (`WeekView` Core'daki modelin adı).
 - `.` / `,` haftayı 7 gün kaydırır; bu haftaya dönünce `start` yeniden `nil` olur ki gün değişince görünüm kendiliğinden ilerlesin.
+
+### Kanban
+
+Veri iki çağrıdan birleşir: `APIClient.openTasks()` (bitmemiş **bütün** task'lar — plansız olanlar dahil; koleksiyon REST'i, `status != 'done'`) + `focusView().done` (yalnızca **bugün** bitenler; BİTTİ sütunu sonsuza uzamasın diye). Durum değişimi `PATCH status`'tur; `completed_at` ve aktif task'ın boşalması sunucu kurallarıdır.
+
+- Klavyede gezinme (`←` `→`) ile taşıma (`⇧←` `⇧→`) ayrıdır. `KeyBinding.matches` Shift'i **yalnızca ok tuşlarında** ayırt eder; karakter tuşlarında yok sayar (`?` zaten Shift'le üretilir).
+- Sürükle-bırak: kart `.draggable(task.id)`, sütun `.dropDestination(for: String.self)`; ikisi de `KanbanStore.setStatus`'a düşer.
 
 ### Yüzen panel
 
@@ -285,7 +296,6 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 ## Sıradakiler (PLAN.md → Faz 2)
 
-- **Adım 4 (devam):** ~~Triyaj~~ → ~~Hafta~~ → Kanban → Projeler → Notlar.
+- **Adım 4 (devam):** ~~Triyaj~~ → ~~Hafta~~ → ~~Kanban~~ → Projeler → Notlar.
 - Yüzen panelde eksik kalanlar: `N` ile task'a not düşme, liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
 - Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).
-- Bilinen boşluk: **plansız** task'lar (projeli + tarihsiz) Projeler/Kanban gelene kadar hiçbir ekranda görünmez (Odak bugün + gecikenleri, Hafta tarihli olanları gösterir).
