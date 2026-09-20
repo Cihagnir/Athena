@@ -8,6 +8,7 @@ struct PanelView: View {
 
     var body: some View {
         let panel = app.panel
+        let shape = RoundedRectangle(cornerRadius: Theme.panelRadius, style: .continuous)
         Group {
             switch panel.mode {
             case .mini: MiniPanelContent()
@@ -16,7 +17,10 @@ struct PanelView: View {
         }
         .frame(width: PanelController.width)
         .background(Theme.paper)
-        .overlay(Rectangle().strokeBorder(Theme.ink, lineWidth: panel.isListening ? Theme.focusLine : Theme.hairline))
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(Theme.ink, lineWidth: panel.isListening ? Theme.focusLine : Theme.hairline))
+        // Dinlerken tam opak; pasifken saydamlaşır. Geçiş anlıktır (animasyon yok).
+        .opacity(panel.isListening ? 1 : Theme.panelPassiveOpacity)
         .onGeometryChange(for: CGFloat.self, of: \.size.height) { panel.contentHeight = $0 }
         .frame(maxHeight: .infinity, alignment: panel.anchorsTop ? .top : .bottom)
         .font(Theme.font())

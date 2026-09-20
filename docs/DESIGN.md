@@ -10,7 +10,7 @@ Görsel taslaklar (tema, masaüstü yerleşimi, panel halleri, hızlı ekleme, O
 
 1. **Mürekkep ve kâğıt.** Ekranda yalnızca iki şey vardır: zemin ve onun üzerindeki mürekkep. Renk yok — ne vurgu, ne proje rengi, ne kırmızı uyarı.
 2. **Anlam biçimden gelir.** Öncelik, durum, gecikme, seçim; hepsi tipografi ağırlığı, glif, çizgi ve **ters çevirme** ile anlatılır.
-3. **Derinlik yok.** Gölge, bulanıklık (vibrancy/blur), saydamlık, gradyan, parlama yok. Katmanlar 1 px çizgiyle ayrılır.
+3. **Derinlik yok.** Gölge, bulanıklık (vibrancy/blur), saydamlık, gradyan, parlama yok. Katmanlar 1 px çizgiyle ayrılır. *(Tek istisna: yüzen panel — aşağıda.)*
 4. **Hareket yok.** E-ink kare kare yenilenir: durumlar anında değişir. Geçiş animasyonu, yaylanma, solma yok.
 5. **Metin arayüzdür.** İkon yerine kelime ve glif. Görünür buton minimumda — aksiyonlar klavyededir, arayüz yalnızca durumu gösterir.
 6. **Boşluk hizalamadır.** Monospace ızgara: her şey karakter hücresine oturur; sütunlar kendiliğinden hizalanır.
@@ -62,8 +62,9 @@ Renk olmadığı için her anlamın sabit bir biçimi vardır:
 
 ## Bileşen kuralları
 
-- **Çizgi:** 1 px `ink` (çerçeve) ya da 1 px `ink3` (liste ayraçları). Köşe yarıçapı **0**; pencere/panel dış köşesi de kare.
-- **Paneller (`NSPanel`):** opak `paper`, 1 px `ink` çerçeve, gölge kapalı (`hasShadow = false`), başlık çubuğu yok.
+- **Çizgi:** 1 px `ink` (çerçeve) ya da 1 px `ink3` (liste ayraçları). Köşe yarıçapı **0** (yüzen panel hariç).
+- **Hızlı ekleme paneli:** opak `paper`, 2 px `ink` çerçeve, kare köşe, gölge kapalı, başlık çubuğu yok.
+- **Yüzen panel (mini + liste) — bilinçli istisna** *(kullanıcı kararı, 2026-09-20)*: bütün gün köşede, başka uygulamaların üstünde durduğu için daha yumuşak: köşe yarıçapı **10**; **pasifken %70 opak** (arkası hafifçe görünür), klavyeyi dinlerken **tam opak** + 2 px çerçeve. Geçiş anlıktır; gölge ve blur yine yok. Değerler `Theme.panelRadius` / `Theme.panelPassiveOpacity`.
 - **Zamanlayıcı:** geriye doğru azalan dolu `ink` çubuk; akıcı değil **kademeli** küçülür (e-ink yenilemesi gibi, birkaç saniyede bir adım). Rakam yok.
 - **Odak halkası:** sistem mavi halkası kapatılır; odak = 2 px `ink` çerçeve ya da ters çevirme.
 - **Buton:** varsa köşeli parantezli metin — `[ekle]`; basılıyken ters çevrilir. Çoğu ekranda hiç yoktur.

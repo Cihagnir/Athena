@@ -38,7 +38,7 @@ open build/Build/Products/Debug/TaskTracker.app
 | Mini panel | `T` | Zamanlayıcı: dakika yaz + `↵` başlatır; çalışıyorsa `T` durdurur |
 | Mini panel | `D` | Aktif task'ı tamamla → panel boşalır ("sıradaki ne?") |
 | Mini panel | `␣` | Aktif task seç → liste paneli açılır |
-| Mini panel | `H` | Paneli gizle (geri getirmek: `⌃⌥M` ya da palette "Yüzen paneli göster / gizle") |
+| Mini panel | `H` | Paneli tamamen gizle. `⌃⌥M` (ya da `⌃⌥L`) geri getirir ve klavyeyi verir; gizli kalma tercihi yeniden başlatmada da korunur. Klavyeyi vermeden göster/gizle: "Yüzen paneli göster / gizle" aksiyonu (palet ya da Ayarlar'dan kısayol) |
 | Mini panel | `esc` | Klavyeyi önceki uygulamaya geri ver |
 | Liste paneli | `↵` | Seçili task'ı aktif yap, mini panele dön |
 | Liste paneli | `P` | Sabitle: klavyeyi bıraksa da liste açık kalır (pasif dashboard) |
@@ -243,6 +243,7 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 | `NSAllowsArbitraryLoads` | karar | Sunucu yerelde / tailnet IP'sinde düz `http` olabilir. Faz 4'te `https` adresine geçince daraltılabilir. |
 | App Sandbox kapalı | karar | Kişisel araç; global kısayol ve ileride panel davranışları için gereksiz sürtünme. |
 | İyimser güncelleme yok | karar | Yukarıda — tutarlılık > milisaniyeler. |
+| Yüzen panel yuvarlak + pasifken saydam | karar | Kullanıcı isteği: köşede sürekli duran panel daha yumuşak dursun. "Saydamlık yok / köşe 0" kurallarının tek istisnası; değerler `Theme.panelRadius` (10) ve `Theme.panelPassiveOpacity` (0.7). Hızlı ekleme paneli kare ve opak kalır. |
 | Pencere köşeleri yuvarlak | **sapma** | macOS başlıklı pencerelerde köşeyi sistem çizer. Kare köşe için ana pencereyi de çerçevesiz `NSWindow`'a çevirmek gerekir (boyutlandırma/taşıma elle yazılır) — ertelendi. Hızlı ekleme paneli çerçevesiz olduğu için kare. |
 | Blok imleç `█` yok | **sapma** | `NSTextView`'ın ekleme imleci artık sistem bileşeni; özelleştirmek kırılgan. İmleç `ink` renginde ince çizgi. |
 | Kısayol kaydedici kutusu | **sapma** | `KeyboardShortcuts.Recorder` paketin kendi (yuvarlak, İngilizce "Record Shortcut") bileşeni. Tema içi bir kaydedici adım 2'de yazılabilir. |

@@ -38,6 +38,13 @@ enum Theme {
     /// "Klavyeyi dinliyor" / odak çerçevesi.
     static let focusLine: CGFloat = 2
 
+    // MARK: Yüzen panel — temanın bilinçli istisnası (docs/DESIGN.md → Yüzen panel)
+
+    /// Köşede sürekli duran panel yumuşak görünsün diye köşeleri yuvarlaktır.
+    static let panelRadius: CGFloat = 10
+    /// Pasifken (klavyeyi dinlemiyorken) arkasındaki içeriği hafifçe gösterir.
+    static let panelPassiveOpacity = 0.7
+
     private static func dynamic(light: Int, dark: Int) -> NSColor {
         NSColor(name: nil) { appearance in
             let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
