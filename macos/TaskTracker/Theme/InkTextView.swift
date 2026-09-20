@@ -16,10 +16,15 @@ struct InkTextView: NSViewRepresentable {
     /// `false`: ↵ yeni satır açar (uzun metin editörleri); `true`: ↵ gönderir, ⇧↵ yeni satır.
     var submitsOnReturn = true
     var tokens: [ParsedInput.Token] = []
-    /// Değeri her değiştiğinde alan klavye odağını alır.
+    /// Değeri her değiştiğinde alan klavye odağını alır; `0` = odak isteme
+    /// (aynı ekranda birden çok alan varken yalnızca etkin olan odaklansın diye).
     var focusTrigger = 0
+    /// Alan odağı aldığında (ör. fareyle tıklanınca) çağrılır.
+    var onFocus: (() -> Void)?
     var onSubmit: () -> Void = {}
     var onTab: () -> Void = {}
+    /// `⇧⇥`; verilmezse `onTab` çağrılır.
+    var onBackTab: (() -> Void)?
     var onCancel: () -> Void = {}
     /// Verilirse ↑/↓ imleci oynatmak yerine bunları çağırır (komut paleti listesi için).
     var onMoveUp: (() -> Void)?
@@ -28,7 +33,8 @@ struct InkTextView: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let textView = NSTextView()
+        let textView = FocusReportingTextView()
+        textView.onFocus = { [weak coordinator = context.coordinator] in coordinator?.parent.onFocus?() }
         textView.delegate = context.coordinator
         textView.isRichText = false
         textView.allowsUndo = true
@@ -72,7 +78,7 @@ struct InkTextView: NSViewRepresentable {
 
         if coordinator.lastFocusTrigger != focusTrigger {
             coordinator.lastFocusTrigger = focusTrigger
-            DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) }
+            if focusTrigger != 0 { DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) } }
         }
     }
 
@@ -97,6 +103,16 @@ struct InkTextView: NSViewRepresentable {
         storage.endEditing()
     }
 
+    private final class FocusReportingTextView: NSTextView {
+        var onFocus: (() -> Void)?
+
+        override func becomeFirstResponder() -> Bool {
+            let became = super.becomeFirstResponder()
+            if became { onFocus?() }
+            return became
+        }
+    }
+
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: InkTextView
         weak var textView: NSTextView?
@@ -119,8 +135,11 @@ struct InkTextView: NSViewRepresentable {
                     parent.onSubmit()
                 }
                 return true
-            case #selector(NSResponder.insertTab(_:)), #selector(NSResponder.insertBacktab(_:)):
+            case #selector(NSResponder.insertTab(_:)):
                 parent.onTab()
+                return true
+            case #selector(NSResponder.insertBacktab(_:)):
+                (parent.onBackTab ?? parent.onTab)()
                 return true
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onCancel()

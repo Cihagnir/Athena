@@ -40,7 +40,7 @@ enum Route: String, CaseIterable, Identifiable {
 
 /// Ana pencerenin üstüne açılan, klavyeyi devralan katmanlar.
 enum Overlay {
-    case palette, help
+    case palette, help, editTask
 }
 
 /// Uygulamanın kökü: oturum, yönlendirme, store'lar ve realtime döngüsü.
@@ -61,6 +61,7 @@ final class AppState {
     let projectsScreen: ProjectsScreenStore
     let notes: NotesStore
     let quickNote: QuickNoteController
+    let taskEditor: TaskEditorModel
     let quickAdd: QuickAddController
     let panel: PanelController
 
@@ -85,9 +86,15 @@ final class AppState {
         projectsScreen = ProjectsScreenStore(backend: backend, projects: projects)
         notes = NotesStore(backend: backend, projects: projects)
         quickNote = QuickNoteController(backend: backend)
+        taskEditor = TaskEditorModel(backend: backend, projects: projects)
         quickAdd = QuickAddController(backend: backend)
         panel = PanelController(settings: settings, active: active, today: today)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
+        taskEditor.onFinished = { [weak self] saved in
+            guard let self else { return }
+            overlay = nil
+            if saved { Task { await self.reloadVisibleTasks() } }
+        }
         registry.register(AppActions.all(for: self))
         // Görünümden bağımsız: pencere açılışta kapalı olsa da (login item) oturum kurulur.
         Task { await bootstrap() }
@@ -166,6 +173,7 @@ final class AppState {
 
     /// Yalnızca DEBUG: ekranları klavyesiz doğrulamak için (macos/README.md → Doğrulama).
     ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help   TT_DEBUG_DETAILS=1
+    ///   TT_DEBUG_EDIT=1   (Odak'ta seçili task'ın düzenleme katmanı)
     ///   TT_DEBUG_TRIAGE=choose|date|project
     ///   TT_DEBUG_PANEL=listen|expanded|timer|list   (yüzen panelin halleri)
     ///   TT_DEBUG_QUICKNOTE="Başlık #proje\\ngövde"
@@ -175,6 +183,12 @@ final class AppState {
         let env = ProcessInfo.processInfo.environment
         if let route = env["TT_DEBUG_ROUTE"].flatMap(Route.init(rawValue:)) { self.route = route }
         if env["TT_DEBUG_DETAILS"] != nil { today.showsDetails = true }
+        if env["TT_DEBUG_EDIT"] != nil {
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                editTask(today.selected)
+            }
+        }
         if let mode = env["TT_DEBUG_TRIAGE"] {
             route = .triage
             Task { [triage] in
@@ -266,6 +280,22 @@ final class AppState {
             try? await Task.sleep(for: .seconds(delay))
             delay = min(delay * 2, 30)
         }
+    }
+
+    // MARK: Task düzenleme
+
+    /// Detay açıkken `E`: düzenleme katmanını açar.
+    func editTask(_ task: TaskItem?) {
+        guard let task else { return }
+        taskEditor.begin(task)
+        overlay = .editTask
+    }
+
+    private func reloadVisibleTasks() async {
+        await today.reload()
+        if route == .week { await week.reload() }
+        if route == .kanban { await kanban.reload() }
+        await active.reload()
     }
 
     // MARK: Pencere

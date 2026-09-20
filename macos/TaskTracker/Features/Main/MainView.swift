@@ -39,6 +39,7 @@ struct MainView: View {
             switch app.overlay {
             case .palette: PaletteView()
             case .help: HelpView()
+            case .editTask: TaskEditorView()
             case nil: EmptyView()
             }
         }

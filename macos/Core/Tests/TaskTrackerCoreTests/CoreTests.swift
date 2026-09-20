@@ -10,6 +10,7 @@ import Testing
         #expect(Day.label("2027-01-01") == "01.01 Cum")
         #expect(Day.label("bozuk") == "bozuk")
         #expect(Day.weekdayFirst("2026-09-20") == "Paz 20.09")
+        #expect(Day.full("2026-09-05") == "05.09.2026")
     }
 
     @Test func arithmetic() {
@@ -215,6 +216,28 @@ struct LiveAPITests {
 
         try await api.deleteNote(manual.id)
         try await api.deleteNote(quick.note.id)
+        try await api.deleteProject(project.id)
+    }
+
+    @Test func editsEveryTaskField() async throws {
+        let api = try await client()
+        let project = try await api.createProject(name: "zz-swift-duzenle", area: .work)
+        let id = try await api.quickAdd(text: "zz-swift düzenlenecek @kişisel").task.id
+
+        // Düzenleme alanındaki tam tarih yazımı sözlükten geri çözülmeli.
+        let start = try await api.resolveDate(Day.full("2027-02-03"))
+        #expect(start == "2027-02-03")
+
+        var task = try await api.updateTask(id, TaskPatch(title: "zz-swift yeni başlık", details: "satır 1\nsatır 2", priority: 1,
+                                                          scheduledDate: start, dueDate: "2027-02-10", project: project.id, area: "work"))
+        #expect(task.title == "zz-swift yeni başlık" && task.details == "satır 1\nsatır 2" && task.priority == 1)
+        #expect(task.scheduledDate == "2027-02-03" && task.dueDate == "2027-02-10" && task.project == project.id && task.area == .work)
+
+        task = try await api.updateTask(id, TaskPatch(scheduledDate: "", dueDate: "", project: "", area: ""))
+        #expect(task.scheduledDate.isEmpty && task.dueDate.isEmpty && task.project.isEmpty && task.area == nil)
+        #expect(task.title == "zz-swift yeni başlık")
+
+        try await api.deleteTask(id)
         try await api.deleteProject(project.id)
     }
 

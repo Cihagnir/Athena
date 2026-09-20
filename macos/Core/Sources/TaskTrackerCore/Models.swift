@@ -314,9 +314,16 @@ public struct TaskPatch: Sendable, Encodable {
     public var scheduledDate: String?
     public var dueDate: String?
     public var sortOrder: Double?
+    /// Proje id'si; `""` bağı kaldırır.
+    public var project: String?
+    /// `"work"` | `"personal"`; `""` alanı boşaltır (bu yüzden `Area?` değil metin).
+    public var area: String?
 
     public init(title: String? = nil, details: String? = nil, status: TaskStatus? = nil, priority: Int? = nil,
-                scheduledDate: String? = nil, dueDate: String? = nil, sortOrder: Double? = nil) {
+                scheduledDate: String? = nil, dueDate: String? = nil, sortOrder: Double? = nil,
+                project: String? = nil, area: String? = nil) {
+        self.project = project
+        self.area = area
         self.title = title
         self.details = details
         self.status = status
@@ -327,7 +334,7 @@ public struct TaskPatch: Sendable, Encodable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case title, status, priority
+        case title, status, priority, project, area
         case details = "description"
         case scheduledDate = "scheduled_date"
         case dueDate = "due_date"

@@ -26,7 +26,7 @@ struct KanbanView: View {
             .frame(maxHeight: .infinity)
 
             InkRule()
-            InkHints("↑↓ ← → gezin · ⇧← ⇧→ durumu taşı · D tamamla · E detay · ↵ aktif · sürükle-bırak")
+            InkHints("↑↓ ← → gezin · ⇧← ⇧→ durumu taşı · D tamamla · E detay / düzenle · ↵ aktif · sürükle-bırak")
                 .padding(.horizontal, 32).padding(.vertical, 8)
         }
         .keyboardFocus(unless: app.overlay != nil)

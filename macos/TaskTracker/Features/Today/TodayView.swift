@@ -15,7 +15,7 @@ struct TodayView: View {
             InkRule()
             list(store)
             InkRule()
-            InkHints("↑↓ gezin · E detay · ↵ aktif yap · D tamamla · Y yarına · 1–4 öncelik · ⇥ alan · ? tümü · ⌘K komut")
+            InkHints("↑↓ gezin · E detay, tekrar E düzenle · ↵ aktif yap · D tamamla · Y yarına · 1–4 öncelik · ⇥ alan · ? tümü · ⌘K komut")
                 .padding(.horizontal, 32).padding(.vertical, 8)
         }
         // Sıra önemli: tuşlar odaktaki görünüme ve onun üstündekilere gider; dinleyici

@@ -37,6 +37,7 @@ open build/Build/Products/Debug/TaskTracker.app
 | Her yerden | `⌃⌥L` | Liste panelini aç / kapat (mini panelin yerinde açılır) |
 | Mini panel | `E` | Detayları genişlet / daralt (proje, alan, bitiş, açıklama) |
 | Mini panel | `T` | Zamanlayıcı: dakika yaz + `↵` başlatır; çalışıyorsa `T` durdurur |
+| Mini panel | `N` | Aktif task'a not düş: yaz + `↵` → açıklamanın sonuna satır olarak eklenir |
 | Mini panel | `D` | Aktif task'ı tamamla → panel boşalır ("sıradaki ne?") |
 | Mini panel | `␣` | Aktif task seç → liste paneli açılır |
 | Mini panel | `H` | Paneli tamamen gizle. `⌃⌥M` (ya da `⌃⌥L`) geri getirir ve klavyeyi verir; gizli kalma tercihi yeniden başlatmada da korunur. Klavyeyi vermeden göster/gizle: "Yüzen paneli göster / gizle" aksiyonu (palet ya da Ayarlar'dan kısayol) |
@@ -53,7 +54,8 @@ open build/Build/Products/Debug/TaskTracker.app
 | Ana pencere | `⌘M` / `⌘W` | Küçült (Dock'a) / kapat (uygulama arka planda kalır) |
 | Ana pencere | `⌃⌘F` | Tam ekran aç / kapat (durum hatırlanır; bir sonraki açılış aynı halde başlar) |
 | Odak listesi | `↑` `↓` / `J` `K` | Gezin |
-| Odak listesi | `E` | Seçili task'ın detayını aç / kapat (açıklama + tüm alanlar); açıkken imleçle birlikte gezer. `esc` kapatır, çift tık da açar |
+| Odak · Hafta · Kanban | `E` | Detayı aç; **detay açıkken tekrar `E` → düzenleme katmanı**. `esc` detayı kapatır, çift tık da açar |
+| Düzenleme katmanı | `⇥` `⇧⇥` · `↵` · `esc` | Alanlar arası gez (başlık, başla, son, öncelik, alan, proje, açıklama) · kaydet (açıklamada `⇧↵` yeni satır) · vazgeç. Tarihler hızlı ekleme sözlüğüyle yazılır (`cuma`, `25.09`); boş bırakmak alanı temizler |
 | Odak listesi | `↵` | Aktif task yap / bırak (`▸`) |
 | Odak listesi | `D` | Tamamla / geri al |
 | Odak listesi | `Y` | Yarına at |
@@ -123,11 +125,12 @@ TaskTracker/               uygulama hedefi
     KanbanStore.swift      Kanban: durum sütunları, kart/sütun gezinme, durum taşıma
     ProjectsScreenStore.swift  Projeler görünümü: seçim + modlar (oluştur / adlandır / tanım / sil)
     NotesStore.swift       Notlar: ızgara, proje filtresi, arama, editör (otomatik kayıt)
+    TaskEditorModel.swift  Task düzenleme katmanı: alanlar, canlı tarih çözümü, doğrulama, kayıt
     SupportingStores.swift ProjectStore (adlar), ActiveTaskStore (aktif task + zamanlayıcı)
     InkTextView.swift      token vurgulu metin alanı (NSTextView); hızlı ekleme ve palet kullanır
   Features/
     Login/ Main/ Today/ Triage/ Week/ Kanban/ Projects/ Notes/ QuickAdd/ QuickNote/ Settings/
-    Overlays/              PaletteView (⌘K), HelpView (?) — ana pencerenin üstüne açılan katmanlar
+    Overlays/              PaletteView (⌘K), HelpView (?), TaskEditorView — ana pencerenin üstüne açılan katmanlar
     Panel/                 PanelController (durum + pencere), PanelView (mini ve liste içerikleri)
     MenuBar/               MenuBarMenu — menü çubuğu öğesinin menüsü
   Support/
@@ -201,6 +204,15 @@ Veri iki çağrıdan birleşir: `APIClient.openTasks()` (bitmemiş **bütün** t
 
 - Klavyede gezinme (`←` `→`) ile taşıma (`⇧←` `⇧→`) ayrıdır. `KeyBinding.matches` Shift'i **yalnızca ok tuşlarında** ayırt eder; karakter tuşlarında yok sayar (`?` zaten Shift'le üretilir).
 - Sürükle-bırak: kart `.draggable(task.id)`, sütun `.dropDestination(for: String.self)`; ikisi de `KanbanStore.setStatus`'a düşer.
+
+### Task düzenleme
+
+`AppState.editTask(_:)` → `Overlay.editTask`. Katman her görünümde aynıdır; `E` aksiyonları "detay kapalıysa aç, açıksa düzenle" kuralını uygular (Odak, Hafta, Kanban).
+
+- Alanlar düz metindir ve **kaydederken** doğrulanır (`TaskEditorModel.validatedPatch`): tarihler `APIClient.resolveDate` ile sunucuda çözülür (düzenleme alanı tarihi `05.09.2026` biçiminde gösterir — `Day.full` — ve sözlük bunu geri çözer), öncelik 1–4, alan `iş`/`kişisel` (önek yeter), proje tam ad ya da tekil önek. Hata varsa kayıt yapılmaz; ilk hatalı alan odaklanır ve altında `? mesaj` görünür.
+- Boş bırakılan tarih / proje / alan o alanı **temizler** (`TaskPatch` boş metin yollar).
+- Tek ekranda yedi `InkTextView` vardır: `focusTrigger: 0` "odak isteme" demektir, yalnızca etkin alan odaklanır; fareyle tıklanan alan `onFocus` ile modele bildirilir.
+- Mini paneldeki `N` ayrı bir yoldur (`PanelController.handleNoteInput` → `ActiveTaskStore.appendNote`): metin alanı değil, süre girişindeki gibi küçük bir durum makinesi — panelde klavye odağı hiç kaybolmasın diye.
 
 ### Projeler ve Notlar
 
@@ -280,12 +292,12 @@ Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etme
 
 ```sh
 TT_DEBUG_ROUTE=settings \
-TT_DEBUG_QUICKNOTE='Başlık #proje\ngövde' TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded TT_DEBUG_TRIAGE=date \
+TT_DEBUG_EDIT=1 TT_DEBUG_QUICKNOTE='Başlık #proje\ngövde' TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded TT_DEBUG_TRIAGE=date \
 TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma !1 // kısa not" \
   build/Build/Products/Debug/TaskTracker.app/Contents/MacOS/TaskTracker
 ```
 
-(`TT_DEBUG_TRIAGE`: `choose` | `date` | `project`. `TT_DEBUG_OVERLAY`: `palette` | `help`. `TT_DEBUG_PANEL`: `listen` | `expanded` | `timer` | `list` — yüzen panelin halini klavye odağı olmadan zorlar. Not: uygulama terminalden arka planda başlatılıp pasifleşince gerçek klavye odağı düşer; panel halleri bu yüzden zorlanarak doğrulanır.)
+(`TT_DEBUG_TRIAGE`: `choose` | `date` | `project`. `TT_DEBUG_OVERLAY`: `palette` | `help`. `TT_DEBUG_PANEL`: `listen` | `expanded` | `timer` | `note` | `list` — yüzen panelin halini klavye odağı olmadan zorlar. Not: uygulama terminalden arka planda başlatılıp pasifleşince gerçek klavye odağı düşer; panel halleri bu yüzden zorlanarak doğrulanır.)
 
 Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults delete local.tasktracker.mac`
 Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/Library/Saved\ Application\ State/local.tasktracker.mac.savedState`
@@ -312,6 +324,6 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 ## Sıradakiler (PLAN.md → Faz 2)
 
-- **Task düzenleme:** başlık, açıklama, tarihler, proje — detay bölümü şu an salt-okunur. Projeye task bağlama ve notu task'a bağlama (`tasks.note`) da bununla birlikte.
-- Yüzen panelde eksik kalanlar: `N` ile task'a not düşme, liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
-- Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).
+- Notu task'a bağlama (`tasks.note` ilişkisi backend'de hazır, arayüzü yok). Triyajda task düzenleme kısayolu yok (Odak'tan yapılır).
+- Yüzen panelde eksik kalanlar: liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
+- Odak listesinde eksik kalanlar: `⌘↑/⌘↓` ile sıralama, `/` filtre.

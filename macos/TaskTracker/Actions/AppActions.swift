@@ -114,9 +114,9 @@ enum AppActions {
                 guard let app, let task = app.today.selected else { return }
                 app.active.toggle(task)
             },
-            AppAction(id: "today.details", title: "Detayı aç / kapat", context: .todayList,
-                      keys: [KeyBinding(key: "e", display: "E")]) {
-                today.toggleDetails()
+            AppAction(id: "today.details", title: "Detayı aç · açıkken düzenle", context: .todayList,
+                      keys: [KeyBinding(key: "e", display: "E")]) { [weak app] in
+                if today.showsDetails { app?.editTask(today.selected) } else { today.toggleDetails() }
             },
             AppAction(id: "today.details.close", title: "Detayı kapat", context: .todayList,
                       keys: [KeyBinding(key: .escape, display: "esc")], showsInPalette: false) {
@@ -170,7 +170,9 @@ enum AppActions {
             action("earlier", "Task'ı bir gün geri taşı (en erken bugün)", [KeyBinding(key: .leftArrow, display: "←"), KeyBinding(key: "h", display: "H")]) { store.shiftDay(-1) },
             action("today", "Task'ı bugüne al", [KeyBinding(key: "b", display: "B")]) { store.moveToToday() },
             action("done", "Tamamla / geri al", [KeyBinding(key: "d", display: "D")]) { store.toggleDone() },
-            action("details", "Detayı aç / kapat", [KeyBinding(key: "e", display: "E")]) { store.toggleDetails() },
+            action("details", "Detayı aç · açıkken düzenle", [KeyBinding(key: "e", display: "E")]) { [weak app] in
+                if store.showsDetails { app?.editTask(store.selected) } else { store.toggleDetails() }
+            },
             action("activate", "Aktif task yap / bırak", [KeyBinding(key: .return, display: "↵")]) { [weak app] in
                 guard let app, let task = app.week.selected else { return }
                 app.active.toggle(task)
@@ -195,7 +197,9 @@ enum AppActions {
             action("forward", "Kartı sonraki duruma taşı", [KeyBinding(key: .rightArrow, modifiers: .shift, display: "⇧→")]) { store.shiftStatus(1) },
             action("back", "Kartı önceki duruma taşı", [KeyBinding(key: .leftArrow, modifiers: .shift, display: "⇧←")]) { store.shiftStatus(-1) },
             action("done", "Tamamla / geri al", [KeyBinding(key: "d", display: "D")]) { store.toggleDone() },
-            action("details", "Açıklamayı aç / kapat", [KeyBinding(key: "e", display: "E")]) { store.toggleDetails() },
+            action("details", "Açıklamayı aç · açıkken düzenle", [KeyBinding(key: "e", display: "E")]) { [weak app] in
+                if store.showsDetails { app?.editTask(store.selected) } else { store.toggleDetails() }
+            },
             action("activate", "Aktif task yap / bırak", [KeyBinding(key: .return, display: "↵")]) { [weak app] in
                 guard let app, let task = app.kanban.selected else { return }
                 app.active.toggle(task)
@@ -260,6 +264,8 @@ enum AppActions {
                       keys: [KeyBinding(key: "t", display: "T")], showsInPalette: false) { panel.timerKey() },
             AppAction(id: "mini.done", title: "Aktif task'ı tamamla", context: .miniPanel,
                       keys: [KeyBinding(key: "d", display: "D")]) { panel.completeActive() },
+            AppAction(id: "mini.note", title: "Aktif task'a not düş (açıklamaya eklenir)", context: .miniPanel,
+                      keys: [KeyBinding(key: "n", display: "N")], showsInPalette: false) { panel.beginNote() },
             AppAction(id: "mini.pick", title: "Aktif task seç (liste paneli açılır)", context: .miniPanel,
                       keys: [KeyBinding(key: .space, display: "␣")], showsInPalette: false) { panel.openList() },
             AppAction(id: "mini.hide", title: "Paneli gizle", context: .miniPanel,

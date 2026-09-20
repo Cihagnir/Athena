@@ -31,7 +31,7 @@ struct PanelView: View {
         .onAppear { focused = true }
         .onChange(of: panel.isListening) { _, listening in if listening { focused = true } }
         .onKeyPress(phases: .down) { press in
-            if panel.handleTimerInput(press) { return .handled }
+            if panel.handleTimerInput(press) || panel.handleNoteInput(press) { return .handled }
             let context: ActionContext = panel.mode == .mini ? .miniPanel : .listPanel
             if app.registry.handle(press, in: context) == .handled { return .handled }
             // Liste paneli, Odak listesinin aksiyonlarını (D, Y, 1–4, ⇥, ↑↓) aynen kullanır.
@@ -53,9 +53,10 @@ private struct MiniPanelContent: View {
                 title(task.title)
                 timerBar
                 if let input = panel.timerInput { timerInput(input) }
+                if let input = panel.noteInput { noteInput(input) }
                 if panel.isExpanded { details(task) }
-                if panel.isListening && panel.timerInput == nil {
-                    InkHints(panel.isExpanded ? "D tamamla · T süre · esc daralt" : "E detay · T süre · D tamamla · ␣ seç · H gizle")
+                if panel.isListening && panel.timerInput == nil && panel.noteInput == nil {
+                    InkHints(panel.isExpanded ? "N not · D tamamla · T süre · esc daralt" : "E detay · T süre · N not · D tamamla · ␣ seç · H gizle")
                 }
             } else {
                 Text("sıradaki ne?").font(Theme.font(Theme.Size.title)).foregroundStyle(Theme.ink3)
@@ -90,6 +91,17 @@ private struct MiniPanelContent: View {
             Text(input + "█").frame(minWidth: 48, alignment: .leading)
                 .overlay(alignment: .bottom) { Rectangle().fill(Theme.ink).frame(height: Theme.hairline) }
             Text("dk · ↵ başlat").foregroundStyle(Theme.ink2)
+        }
+    }
+
+    private func noteInput(_ input: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .top, spacing: 8) {
+                Text("not").foregroundStyle(Theme.ink2)
+                Text(input + "█").fixedSize(horizontal: false, vertical: true)
+            }
+            Rectangle().fill(Theme.ink).frame(height: Theme.hairline)
+            InkHints("↵ açıklamaya ekle · esc vazgeç")
         }
     }
 

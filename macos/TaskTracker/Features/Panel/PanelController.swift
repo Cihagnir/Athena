@@ -33,6 +33,8 @@ final class PanelController {
     private(set) var isPinned = false
     /// `nil` değilse süre girişi modu: yazılan dakika.
     private(set) var timerInput: String?
+    /// `nil` değilse not düşme modu: aktif task'ın açıklamasına eklenecek satır.
+    private(set) var noteInput: String?
     /// İçerik pencerenin üstüne mi altına mı yaslı — ekranın hangi yarısındaysa.
     private(set) var anchorsTop = true
     /// Görünümün ölçtüğü içerik yüksekliği (yeniden yaslama hesabı için).
@@ -92,6 +94,7 @@ final class PanelController {
         isListening = isKey
         guard !isKey else { return }
         timerInput = nil
+        noteInput = nil
         isExpanded = false
         if mode == .list && !isPinned { mode = .mini }
     }
@@ -100,6 +103,7 @@ final class PanelController {
         isListening = false
         isExpanded = false
         timerInput = nil
+        noteInput = nil
         if !isPinned { mode = .mini }
     }
 
@@ -110,6 +114,7 @@ final class PanelController {
         mode = state == "list" ? .list : .mini
         isExpanded = state == "expanded"
         timerInput = state == "timer" ? "25" : nil
+        noteInput = state == "note" ? "KDV satırını ayrı göster" : nil
         if mode == .list { Task { await today.reload() } }
     }
     #endif
@@ -165,6 +170,39 @@ final class PanelController {
 
     /// `P`: liste klavyeyi bıraksa da açık kalır (pasif dashboard).
     func togglePinned() { isPinned.toggle() }
+
+    // MARK: Not düşme
+
+    func beginNote() {
+        guard active.current?.task != nil else { return }
+        timerInput = nil
+        noteInput = ""
+    }
+
+    /// Not modu açıkken tuşları devralır: yazı, ⌫, ↵ ekle, esc vazgeç.
+    func handleNoteInput(_ press: KeyPress) -> Bool {
+        guard var input = noteInput else { return false }
+        switch press.key {
+        case .return:
+            noteInput = nil
+            let line = input.trimmingCharacters(in: .whitespaces)
+            if !line.isEmpty {
+                active.appendNote(line)
+                release()
+            }
+        case .escape:
+            noteInput = nil
+        case .delete:
+            if !input.isEmpty { input.removeLast() }
+            noteInput = input
+        default:
+            let typed = press.characters.filter { !$0.isNewline && $0 != "\t" }
+            if !typed.isEmpty, press.modifiers.intersection([.command, .control]).isEmpty, input.count < 300 {
+                noteInput = input + typed
+            }
+        }
+        return true
+    }
 
     // MARK: Süre girişi
 

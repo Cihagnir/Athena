@@ -163,6 +163,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 2. ✅ *(2026-09-20)* Menü çubuğu öğesi + login item + kısayol ayarları + `⌘K` komut paleti + `?` yardım + tam ekran (`⌃⌘F`)
 3. ✅ *(2026-09-20)* Yüzen paneller (mini → liste) + aktif task + zamanlayıcı çubuğu (`N` not düşme hariç — ertelendi)
 4. ✅ *(2026-09-21)* Triyaj → Hafta → Kanban → Projeler → Notlar
+5. ✅ *(2026-09-21)* Task düzenleme katmanı (`E` → `E`) + mini panelde `N` ile not düşme
 
 **Çalışma biçimi:** her adım sonunda uygulama kullanılır durumda teslim edilir; kullanıcı gerçek kullanımdan yeni akış/kısayol/tasarım istekleriyle gelir, bunlar bir sonraki adıma girmeden önce işlenir. Görsel dilin ilkeleri [DESIGN.md](DESIGN.md)'de sabit ("E-ink"); tonlar, ölçüler ve yerleşim 1. adımda oradaki varsayılanlarla başlar, kullanım sırasında birlikte ayarlanır.
 

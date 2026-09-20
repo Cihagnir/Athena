@@ -48,6 +48,16 @@ final class ActiveTaskStore {
         }
     }
 
+    /// Aktif task'ın açıklamasının sonuna bir satır ekler (mini panelde `N`).
+    func appendNote(_ line: String) {
+        guard let task = current?.task else { return }
+        let details = task.details.isEmpty ? line : task.details + "\n" + line
+        Task {
+            await backend.run { try await $0.updateTask(task.id, TaskPatch(details: details)) }
+            await reload()
+        }
+    }
+
     /// Aktif task'ı tamamlar; sunucu aktif task'ı ve zamanlayıcıyı kendisi boşaltır.
     func completeCurrent() {
         guard let id = taskID else { return }

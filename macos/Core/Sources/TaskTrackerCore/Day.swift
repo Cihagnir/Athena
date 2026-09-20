@@ -31,6 +31,12 @@ public enum Day {
         return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
     }
 
+    /// "2026-09-20" → "20.09.2026" — düzenleme alanlarında; hızlı ekleme sözlüğü bunu geri çözer.
+    public static func full(_ ymd: String) -> String {
+        guard let p = parts(ymd) else { return ymd }
+        return String(format: "%02d.%02d.%04d", p.d, p.m, p.y)
+    }
+
     /// "2026-09-20" → "Paz 20.09" (gün adı önde; ajanda başlıkları için)
     public static func weekdayFirst(_ ymd: String) -> String {
         let label = label(ymd).split(separator: " ")

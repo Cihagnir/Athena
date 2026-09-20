@@ -13,7 +13,7 @@ struct WeekScreen: View {
             Rectangle().fill(Theme.ink).frame(height: Theme.hairline)
             agenda(store)
             InkRule()
-            InkHints("↑↓ gezin · ← → günü taşı · B bugüne al · D tamamla · E detay · ↵ aktif · , . hafta · 0 bu hafta")
+            InkHints("↑↓ gezin · ← → günü taşı · B bugüne al · D tamamla · E detay / düzenle · ↵ aktif · , . hafta · 0 bu hafta")
                 .padding(.horizontal, 32).padding(.vertical, 8)
         }
         .keyboardFocus(unless: app.overlay != nil)
