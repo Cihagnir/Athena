@@ -9,6 +9,8 @@ struct SettingsView: View {
     @State private var server = ""
     @State private var serverMessage: String?
     @State private var isChecking = false
+    @State private var loginItemEnabled = LoginItem.isEnabled
+    @State private var loginItemMessage: String?
 
     var body: some View {
         ScrollView {
@@ -16,6 +18,7 @@ struct SettingsView: View {
                 Text("AYARLAR").font(Theme.font(Theme.Size.title, bold: true))
                 serverSection
                 appearanceSection
+                startupSection
                 shortcutsSection
             }
             .padding(.horizontal, 32).padding(.top, 44).padding(.bottom, 32)
@@ -70,6 +73,36 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    // MARK: Başlangıç
+
+    private var startupSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            InkSectionLabel("BAŞLANGIÇ")
+            InkRule()
+            toggleRow("oturum açılışında başlat", isOn: loginItemEnabled) { setLoginItem(!loginItemEnabled) }
+            if let loginItemMessage { Text("? " + loginItemMessage).fixedSize(horizontal: false, vertical: true) }
+            toggleRow("menü çubuğu öğesi", isOn: app.settings.showsMenuBarItem) { app.settings.showsMenuBarItem.toggle() }
+        }
+    }
+
+    private func toggleRow(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        HStack(spacing: 12) {
+            Button(isOn ? "açık" : "kapalı", action: action).buttonStyle(InkButtonStyle(selected: isOn))
+            Text(title)
+        }
+    }
+
+    private func setLoginItem(_ enabled: Bool) {
+        do {
+            try LoginItem.set(enabled)
+            loginItemMessage = LoginItem.needsApproval
+                ? "Sistem Ayarları → Genel → Oturum Açma Öğeleri'nden onay gerekiyor." : nil
+        } catch {
+            loginItemMessage = error.localizedDescription
+        }
+        loginItemEnabled = LoginItem.isEnabled
     }
 
     // MARK: Kısayollar

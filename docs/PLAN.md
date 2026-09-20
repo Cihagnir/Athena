@@ -159,7 +159,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 
 **Sıra**
 1. ✅ *(2026-09-20)* Proje iskeleti (XcodeGen) + `Theme` (DESIGN.md belirteçleri) + API istemcisi + giriş + `ActionRegistry` + Odak ekranı + hızlı ekleme paneli + Ayarlar (sunucu adresi, görünüm, kısayol listesi) → **gerçek kullanıma geçiş noktası**. Uygulama belgesi: [../macos/README.md](../macos/README.md)
-2. Menü çubuğu öğesi + login item + kısayol ayarları + `⌘K` komut paleti
+2. ✅ *(2026-09-20)* Menü çubuğu öğesi + login item + kısayol ayarları + `⌘K` komut paleti + `?` yardım + tam ekran (`⌃⌘F`)
 3. Yüzen paneller (mini → liste) + aktif task + zamanlayıcı çubuğu
 4. Triyaj (klavye odaklı) → Hafta → Kanban → Projeler → Notlar
 

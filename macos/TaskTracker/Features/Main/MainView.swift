@@ -22,9 +22,8 @@ struct RootView: View {
         .overlay(Rectangle().strokeBorder(Theme.ink, lineWidth: Theme.hairline))
         .background(WindowConfigurator(app: app))
         .ignoresSafeArea()
-        .task {
+        .onAppear {
             app.openMainWindow = { openWindow(id: TaskTrackerApp.mainWindowID) }
-            await app.bootstrap()
         }
     }
 }
@@ -33,6 +32,20 @@ struct MainView: View {
     @Environment(AppState.self) private var app
 
     var body: some View {
+        ZStack {
+            layout
+            // Katmanlar opak ve çerçevelidir; arka plan karartılmaz (saydamlık yok).
+            switch app.overlay {
+            case .palette: PaletteView()
+            case .help: HelpView()
+            case nil: EmptyView()
+            }
+        }
+        // Odaktaki görünümün işlemediği tuşlar buraya çıkar (ör. `?`).
+        .onKeyPress(phases: .down) { app.registry.handle($0, in: .anyView) }
+    }
+
+    private var layout: some View {
         HStack(spacing: 0) {
             Sidebar()
             Rectangle().fill(Theme.ink).frame(width: Theme.hairline)
@@ -51,9 +64,11 @@ struct MainView: View {
     @ViewBuilder private var content: some View {
         switch app.route {
         case .today: TodayView()
-        case .settings: SettingsView()
+        case .settings: SettingsView().keyboardFocus(unless: app.overlay != nil)
         default:
             Text("\(app.route.title.lowercased()) · yakında").foregroundStyle(Theme.ink3)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .keyboardFocus(unless: app.overlay != nil)
         }
     }
 }
@@ -95,6 +110,26 @@ private struct Sidebar: View {
         .buttonStyle(.plain)
         .focusable(false)
     }
+}
+
+/// Tuşların (`?` gibi) işlenebilmesi için görünümü klavye odağına alır; bir katman
+/// açıkken odağı bırakır, kapanınca geri alır.
+private struct KeyboardFocus: ViewModifier {
+    let blocked: Bool
+    @FocusState private var focused: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .focusable()
+            .focusEffectDisabled()
+            .focused($focused)
+            .onAppear { focused = !blocked }
+            .onChange(of: blocked) { _, blocked in focused = !blocked }
+    }
+}
+
+extension View {
+    func keyboardFocus(unless blocked: Bool) -> some View { modifier(KeyboardFocus(blocked: blocked)) }
 }
 
 /// E-ink penceresi: başlık çubuğu ve renkli pencere düğmeleri yok (⌘W / ⌘M / ⌘Q /

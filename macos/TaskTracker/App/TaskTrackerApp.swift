@@ -23,8 +23,14 @@ struct TaskTrackerApp: App {
             CommandMenu("Görünüm") {
                 menuItems(ids: Route.views.map { "route.\($0.rawValue)" })
                 Divider()
-                menuItems(ids: ["window.fullScreen"])
+                menuItems(ids: ["palette.toggle", "window.fullScreen"])
             }
+        }
+
+        MenuBarExtra(isInserted: Bindable(app.settings).showsMenuBarItem) {
+            MenuBarMenu().environment(app)
+        } label: {
+            Text(app.menuBarLabel)
         }
     }
 
@@ -43,6 +49,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     weak var app: AppState?
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// Oturum açılışında başlatıldıysa arka planda kalır: menü çubuğu öğesi ve global
+    /// kısayollar çalışır, pencere ilk istendiğinde açılır.
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard LoginItem.launchedAtLogin else { return }
+        DispatchQueue.main.async {
+            for window in NSApp.windows where window.canBecomeMain { window.close() }
+        }
+    }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         if !hasVisibleWindows { app?.showMainWindow() }

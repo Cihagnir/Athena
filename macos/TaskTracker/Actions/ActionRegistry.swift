@@ -8,6 +8,8 @@ enum ActionContext: String, CaseIterable {
     case global
     /// Uygulama öndeyken — menü komutu olarak.
     case mainWindow
+    /// Ana pencerenin her görünümünde — modifier'sız tuşlar (metin alanı odaktayken çalışmaz).
+    case anyView
     /// Odak listesi klavyeyi dinlerken — modifier'sız tek tuşlar.
     case todayList
     /// Hızlı ekleme paneli — tuşları metin alanı yakalar; burada yalnızca belgelenir.
@@ -17,6 +19,7 @@ enum ActionContext: String, CaseIterable {
         switch self {
         case .global: "HER YERDEN"
         case .mainWindow: "ANA PENCERE"
+        case .anyView: "HER GÖRÜNÜM"
         case .todayList: "ODAK LİSTESİ"
         case .quickAdd: "HIZLI EKLEME"
         }
@@ -47,11 +50,24 @@ struct AppAction: Identifiable {
     var defaultGlobal: KeyboardShortcuts.Shortcut?
     /// `false`: yalnızca belgeleme amaçlı (tuşu başka bir katman yakalıyor).
     var isBindable = true
+    /// `false`: ⌘K paletinde listelenmez (gezinme tuşları, paletin kendisi…).
+    var showsInPalette = true
     let perform: () -> Void
 
     /// Her aksiyonun ayarlardan atanabilen bir global kısayol yuvası vardır.
     var globalName: KeyboardShortcuts.Name { .init("action.\(id)", default: defaultGlobal) }
     var keysDisplay: String { keys.map(\.display).joined(separator: " ") }
+
+    /// Kullanıcının (ya da varsayılanın) atadığı global kısayol: "⌃⌥Space".
+    var globalDisplay: String? {
+        guard isBindable, let shortcut = KeyboardShortcuts.getShortcut(for: globalName) else { return nil }
+        return "\(shortcut)"
+    }
+
+    /// Yerel tuşlar + global kısayol, tek satırda.
+    var allKeysDisplay: String {
+        [keysDisplay, globalDisplay ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
 }
 
 /// Aksiyonların tek kaydı. Odak listesinin tuşları, menü komutları, global
@@ -72,6 +88,23 @@ final class ActionRegistry {
 
     func actions(in context: ActionContext) -> [AppAction] {
         actions.filter { $0.context == context }
+    }
+
+    /// ⌘K paleti: sorgudaki her kelime başlıkta geçmeli (Türkçe/büyük-küçük harf duyarsız).
+    func search(_ query: String) -> [AppAction] {
+        let words = Self.fold(query).split(separator: " ")
+        return actions.filter { action in
+            guard action.isBindable, action.showsInPalette else { return false }
+            let title = Self.fold(action.title)
+            return words.allSatisfy { title.contains($0) }
+        }
+    }
+
+    static func fold(_ text: String) -> String {
+        text.replacingOccurrences(of: "İ", with: "i").replacingOccurrences(of: "I", with: "i").lowercased()
+            .replacingOccurrences(of: "ı", with: "i").replacingOccurrences(of: "ş", with: "s")
+            .replacingOccurrences(of: "ğ", with: "g").replacingOccurrences(of: "ü", with: "u")
+            .replacingOccurrences(of: "ö", with: "o").replacingOccurrences(of: "ç", with: "c")
     }
 
     /// SwiftUI `onKeyPress` için: tuş bu bağlamda bir aksiyona bağlıysa çalıştırır.

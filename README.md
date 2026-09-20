@@ -30,14 +30,14 @@ docs/      plan, kararlar, tasarım, API sözleşmesi
 |---|---|
 | 0 · İskelet | ✅ |
 | 1 · Backend | ✅ parser 30/30, API 17/17 |
-| 2 · macOS | **adım 1 ✅** — giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar (sunucu adresi + kısayollar), aksiyon kaydı. Core paketi 8/8 (canlı sözleşme testleri dahil). Adım 2–4 sırada. |
+| 2 · macOS | **adım 1–2 ✅** — giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar, aksiyon kaydı, tam ekran (`⌃⌘F`), menü çubuğu öğesi (`▸ 3/7`), otomatik başlama, `⌘K` komut paleti, `?` yardım. Core paketi 8/8 (canlı sözleşme testleri dahil). Adım 3–4 sırada. |
 | 3 · Android · 4 · Deploy | sırada değil |
 
 Tasarım: [docs/DESIGN.md](docs/DESIGN.md) + görsel taslak tuvali (bağlantısı dokümanın başında).
 
 ### Devam ederken ilk adım
 
-**Faz 2 / adım 2:** menü çubuğu öğesi (`▸ 3/7`) → oturum açılışında otomatik başlama → `⌘K` komut paleti → `?` kısayol yardımı. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
+**Faz 2 / adım 3:** yüzen paneller — mini panel (6 hal) → onun yerini alan liste paneli → aktif task + zamanlayıcı çubuğu (süre dolunca ses + bildirim). Tasarımı: [docs/DESIGN.md](docs/DESIGN.md) → Yerleşim + tuvaldeki "Mini panel" panosu. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
 
 ### Mac uygulamasını çalıştırma
 

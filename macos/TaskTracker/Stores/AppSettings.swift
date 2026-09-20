@@ -16,6 +16,7 @@ final class AppSettings {
     var token: String? { didSet { defaults.set(token, forKey: "token") } }
     /// Ana pencere en son tam ekranda mıydı — açılışta aynı halde başlar.
     var startsFullScreen: Bool { didSet { defaults.set(startsFullScreen, forKey: "startsFullScreen") } }
+    var showsMenuBarItem: Bool { didSet { defaults.set(showsMenuBarItem, forKey: "showsMenuBarItem") } }
     var appearance: Appearance {
         didSet {
             defaults.set(appearance.rawValue, forKey: "appearance")
@@ -28,6 +29,7 @@ final class AppSettings {
         email = defaults.string(forKey: "email") ?? ""
         token = defaults.string(forKey: "token")
         startsFullScreen = defaults.bool(forKey: "startsFullScreen")
+        showsMenuBarItem = defaults.object(forKey: "showsMenuBarItem") as? Bool ?? true
         appearance = Appearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
     }
 

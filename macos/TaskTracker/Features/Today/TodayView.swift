@@ -5,7 +5,6 @@ import TaskTrackerCore
 /// Klavye: tuşlar `ActionRegistry`'nin `.todayList` bağlamından çözülür.
 struct TodayView: View {
     @Environment(AppState.self) private var app
-    @FocusState private var listFocused: Bool
 
     var body: some View {
         let store = app.today
@@ -16,14 +15,13 @@ struct TodayView: View {
             InkRule()
             list(store)
             InkRule()
-            InkHints("↑↓ gezin · ↵ aktif yap · D tamamla · Y yarına · 1–4 öncelik · ⇥ alan")
+            InkHints("↑↓ gezin · ↵ aktif yap · D tamamla · Y yarına · 1–4 öncelik · ⇥ alan · ? tümü · ⌘K komut")
                 .padding(.horizontal, 32).padding(.vertical, 8)
         }
-        .focusable()
-        .focusEffectDisabled()
-        .focused($listFocused)
+        // Sıra önemli: tuşlar odaktaki görünüme ve onun üstündekilere gider; dinleyici
+        // odaklanabilir katmanın dışında (sonra) durmalı.
+        .keyboardFocus(unless: app.overlay != nil)
         .onKeyPress(phases: .down) { app.registry.handle($0, in: .todayList) }
-        .onAppear { listFocused = true }
     }
 
     private func header(_ store: TodayStore) -> some View {

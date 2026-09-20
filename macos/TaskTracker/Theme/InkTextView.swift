@@ -18,6 +18,9 @@ struct InkTextView: NSViewRepresentable {
     var onSubmit: () -> Void = {}
     var onTab: () -> Void = {}
     var onCancel: () -> Void = {}
+    /// Verilirse ↑/↓ imleci oynatmak yerine bunları çağırır (komut paleti listesi için).
+    var onMoveUp: (() -> Void)?
+    var onMoveDown: (() -> Void)?
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -118,6 +121,14 @@ struct InkTextView: NSViewRepresentable {
                 return true
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onCancel()
+                return true
+            case #selector(NSResponder.moveUp(_:)):
+                guard let move = parent.onMoveUp else { return false }
+                move()
+                return true
+            case #selector(NSResponder.moveDown(_:)):
+                guard let move = parent.onMoveDown else { return false }
+                move()
                 return true
             default:
                 return false

@@ -6,7 +6,7 @@ import SwiftUI
 /// bağlamı) ve Ayarlar'da görünür, global kısayol atanabilir olur.
 enum AppActions {
     static func all(for app: AppState) -> [AppAction] {
-        global(app) + mainWindow(app) + todayList(app) + quickAddDocs
+        global(app) + mainWindow(app) + anyView(app) + todayList(app) + quickAddDocs
     }
 
     private static func global(_ app: AppState) -> [AppAction] {
@@ -35,6 +35,12 @@ enum AppActions {
                       keys: [KeyBinding(key: ",", modifiers: .command, display: "⌘,")]) { [weak app] in
                 app?.showMainWindow(route: .settings)
             },
+            AppAction(id: "palette.toggle", title: "Komut paleti", context: .mainWindow,
+                      keys: [KeyBinding(key: "k", modifiers: .command, display: "⌘K")], showsInPalette: false) { [weak app] in
+                guard let app, app.phase == .loggedIn else { return }
+                app.showMainWindow()
+                app.overlay = app.overlay == .palette ? nil : .palette
+            },
             AppAction(id: "window.fullScreen", title: "Tam ekran aç / kapat", context: .mainWindow,
                       keys: [KeyBinding(key: "f", modifiers: [.control, .command], display: "⌃⌘F")]) { [weak app] in
                 app?.toggleFullScreen()
@@ -42,6 +48,17 @@ enum AppActions {
             AppAction(id: "task.new", title: "Yeni task (hızlı ekleme paneli)", context: .mainWindow,
                       keys: [KeyBinding(key: "n", modifiers: .command, display: "⌘N")]) { [weak app] in
                 app?.quickAdd.show()
+            },
+        ]
+    }
+
+    private static func anyView(_ app: AppState) -> [AppAction] {
+        [
+            AppAction(id: "help.toggle", title: "Bu ekranın kısayolları", context: .anyView,
+                      keys: [KeyBinding(key: "?", display: "?")]) { [weak app] in
+                guard let app else { return }
+                app.showMainWindow()
+                app.overlay = app.overlay == .help ? nil : .help
             },
         ]
     }
@@ -56,11 +73,11 @@ enum AppActions {
         }
         return [
             AppAction(id: "today.down", title: "Aşağı", context: .todayList,
-                      keys: [KeyBinding(key: .downArrow, display: "↓"), KeyBinding(key: "j", display: "J")]) {
+                      keys: [KeyBinding(key: .downArrow, display: "↓"), KeyBinding(key: "j", display: "J")], showsInPalette: false) {
                 today.moveSelection(1)
             },
             AppAction(id: "today.up", title: "Yukarı", context: .todayList,
-                      keys: [KeyBinding(key: .upArrow, display: "↑"), KeyBinding(key: "k", display: "K")]) {
+                      keys: [KeyBinding(key: .upArrow, display: "↑"), KeyBinding(key: "k", display: "K")], showsInPalette: false) {
                 today.moveSelection(-1)
             },
             AppAction(id: "today.activate", title: "Aktif task yap / bırak", context: .todayList,

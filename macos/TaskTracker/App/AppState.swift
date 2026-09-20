@@ -22,6 +22,14 @@ enum Route: String, CaseIterable, Identifiable {
     /// Kenar çubuğundaki ⌘1…⌘6 görünümleri (Ayarlar ayrı durur: ⌘,).
     static let views: [Route] = [.today, .triage, .week, .kanban, .projects, .notes]
     var isImplemented: Bool { self == .today || self == .settings }
+
+    /// Görünümün kendi tuş bağlamı (`?` yardımında ilk sırada gösterilir).
+    var context: ActionContext? { self == .today ? .todayList : nil }
+}
+
+/// Ana pencerenin üstüne açılan, klavyeyi devralan katmanlar.
+enum Overlay {
+    case palette, help
 }
 
 /// Uygulamanın kökü: oturum, yönlendirme, store'lar ve realtime döngüsü.
@@ -39,7 +47,8 @@ final class AppState {
     let quickAdd: QuickAddController
 
     private(set) var phase: Phase = .checking
-    var route: Route = .today
+    var route: Route = .today { didSet { overlay = nil } }
+    var overlay: Overlay?
     /// Kök görünüm açılışta doldurur; pencere kapalıyken yeniden açmak için.
     var openMainWindow: () -> Void = {}
     /// `WindowConfigurator` doldurur (tam ekran gibi pencere düzeyi işler için).
@@ -55,6 +64,15 @@ final class AppState {
         quickAdd = QuickAddController(backend: backend)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
         registry.register(AppActions.all(for: self))
+        // Görünümden bağımsız: pencere açılışta kapalı olsa da (login item) oturum kurulur.
+        Task { await bootstrap() }
+    }
+
+    /// Menü çubuğu öğesinin metni: aktif task varsa `▸`, ardından bugün biten / toplam.
+    var menuBarLabel: String {
+        guard phase == .loggedIn, today.hasLoaded else { return "–" }
+        let total = today.done.count + today.open.count
+        return (active.taskID == nil ? "" : "▸ ") + "\(today.done.count)/\(total)"
     }
 
     // MARK: Oturum
@@ -121,11 +139,17 @@ final class AppState {
     }
 
     /// Yalnızca DEBUG: ekranları klavyesiz doğrulamak için (macos/README.md → Doğrulama).
-    ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma // not"
+    ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help
+    ///   TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma // not"
     private func applyDebugLaunchOptions() {
         #if DEBUG
         let env = ProcessInfo.processInfo.environment
         if let route = env["TT_DEBUG_ROUTE"].flatMap(Route.init(rawValue:)) { self.route = route }
+        switch env["TT_DEBUG_OVERLAY"] {
+        case "palette": overlay = .palette
+        case "help": overlay = .help
+        default: break
+        }
         if let text = env["TT_DEBUG_QUICKADD"] {
             quickAdd.show()
             quickAdd.text = text
@@ -142,6 +166,7 @@ final class AppState {
         today.reset()
         active.reset()
         quickAdd.hide()
+        overlay = nil
         phase = .loggedOut
     }
 
