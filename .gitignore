@@ -3,6 +3,8 @@
 # backend
 backend/.env
 backend/pb_data/
+backend/tunnel/*
+!backend/tunnel/config.example.yml
 node_modules/
 
 # macos (proje dosyası XcodeGen ile project.yml'den üretilir)

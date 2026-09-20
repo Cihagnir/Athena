@@ -23,16 +23,19 @@ public enum APIError: Error, Sendable, Equatable, LocalizedError {
 public struct APIClient: Sendable {
     public let baseURL: URL
     public let token: String?
+    /// İnternete açık sunucunun ilk kapısı (`X-API-Key`); yerel sunucuda gerekmez.
+    public let apiKey: String?
     private let session: URLSession
 
-    public init(baseURL: URL, token: String? = nil, session: URLSession = .shared) {
+    public init(baseURL: URL, token: String? = nil, apiKey: String? = nil, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.token = token
+        self.apiKey = apiKey
         self.session = session
     }
 
     public func with(token: String?) -> APIClient {
-        APIClient(baseURL: baseURL, token: token, session: session)
+        APIClient(baseURL: baseURL, token: token, apiKey: apiKey, session: session)
     }
 
     // MARK: Kimlik
@@ -202,6 +205,7 @@ public struct APIClient: Sendable {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token { request.setValue(token, forHTTPHeaderField: "Authorization") }
+        if let apiKey, !apiKey.isEmpty { request.setValue(apiKey, forHTTPHeaderField: "X-API-Key") }
         return request
     }
 

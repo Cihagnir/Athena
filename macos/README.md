@@ -22,7 +22,7 @@ xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker \
 open build/Build/Products/Debug/TaskTracker.app
 ```
 
-- İlk açılışta giriş ekranı gelir: sunucu `http://127.0.0.1:8090`, e-posta ve parola `backend/.env` içindeki `TT_USER_*`.
+- İlk açılışta giriş ekranı gelir: sunucu `http://127.0.0.1:8090`, e-posta ve parola `backend/.env` içindeki `TT_USER_*`. **API anahtarı** alanı yalnızca internete açık sunucu (`https://tasks.example.com`) için doldurulur — [../docs/DEPLOY.md](../docs/DEPLOY.md) → Mac uygulamasını sunucuya bağlamak.
 - Yeni dosya ekleyince ya da `project.yml` değişince `xcodegen generate` yeniden çalıştırılır. Xcode'da açmak istersen: `open TaskTracker.xcodeproj`.
 - İmza yerel (ad-hoc): Apple Developer hesabı yok, uygulama yalnızca bu Mac'te çalışır.
 
@@ -309,7 +309,8 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 | Konu | Durum | Neden |
 |---|---|---|
 | Token `UserDefaults`'ta | karar | Ad-hoc imzada Keychain her yeniden derlemede izin sorar. Tehdit modeli: tek kullanıcılı Mac, sunucu yalnızca tailnet içinde. Parola saklanmaz; token ~7 gün geçerli, her açılışta yenilenir. |
-| `NSAllowsArbitraryLoads` | karar | Sunucu yerelde / tailnet IP'sinde düz `http` olabilir. Faz 4'te `https` adresine geçince daraltılabilir. |
+| `NSAllowsArbitraryLoads` | karar | Yerel sunucu düz `http`. Sunucu adresi artık `https`; yerel kullanım bırakılınca daraltılabilir. |
+| API anahtarı `UserDefaults`'ta | karar | Token ile aynı gerekçe (ad-hoc imzada Keychain her derlemede izin sorar). `APIClient` anahtarı her isteğe `X-API-Key` olarak ekler — giriş ve SSE dahil. `403` oturumu kapatmaz (o `401`'dir), durum satırında mesaj olarak görünür. |
 | App Sandbox kapalı | karar | Kişisel araç; global kısayol ve ileride panel davranışları için gereksiz sürtünme. |
 | İyimser güncelleme yok | karar | Yukarıda — tutarlılık > milisaniyeler. |
 | Yüzen panel yuvarlak + pasifken saydam | karar | Kullanıcı isteği: köşede sürekli duran panel daha yumuşak dursun. "Saydamlık yok / köşe 0" kurallarının tek istisnası; değerler `Theme.panelRadius` (10) ve `Theme.panelPassiveOpacity` (0.85). Hızlı ekleme paneli kare ve opak kalır. |

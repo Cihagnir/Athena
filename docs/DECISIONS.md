@@ -77,7 +77,7 @@ Planlama oturumunda (2026-09-20) alınan kararlar, gerekçeleri ve elenen altern
 ## 8. Erişim ve altyapı
 
 - Sunucu: `<sunucu>` (Tailscale `<ip>`, Tailscale SSH ile erişim). `~/.ssh/config`'deki Cloudflare Tunnel hostname'i (`server.example.com`) DNS'te çözülmüyor.
-- Erişim şimdilik **yalnızca Tailscale**; public yüzey yok. `tailscale serve` ile tailnet içi gerçek HTTPS.
+- ~~Erişim şimdilik yalnızca Tailscale; public yüzey yok.~~ → **madde 14 ile değişti** (Cloudflare Tunnel + API anahtarı). Tailscale artık yalnızca sunucuya SSH için.
 - Apple Developer hesabı yok → yerel imza; bir özellik gerçekten gerektirirse alınır.
 
 ## 9. Görsel dil: "E-ink" *(2026-09-20)*
@@ -142,8 +142,27 @@ Tasarım önce tuvalde netleştirildi, sonra uygulandı. Kullanıcı kararları:
 | Kayıt | Tanım ve not editörlerinde kaydet tuşu yok; yazarken otomatik kayıt. |
 | Notu task'a bağlama | Ertelendi (`tasks.note` ilişkisi backend'de hazır). |
 
+## 14. Deploy: Cloudflare Tunnel + API anahtarı *(2026-09-21)*
+
+**Karar:** Backend `<sunucu>`'de Docker ile çalışır ve `https://tasks.example.com` adresinden **Cloudflare Tunnel** ile internete açılır. Bu, madde 8'deki "erişim yalnızca Tailscale, public yüzey yok" kararının **yerini alır** (kullanıcı kararı). Koruma: uygulama düzeyinde **API anahtarı** (`X-API-Key`) + oturum + hız sınırlayıcı; yönetim paneli tünelde kapalı. Ayrıntı: [DEPLOY.md](DEPLOY.md).
+
+**Gerekçe:** Sunucuda alan adı ve Cloudflare kurulumu zaten vardı; Tailscale'in Mac'te (ve telefonda) çoğu zaman kapalı olması uygulamayı kullanılamaz kılardı. Bu karar Android'in erişim sorusunu da çözer ("Ertelenen kararlar"daki madde kapandı).
+
+| Konu | Karar | Gerekçe |
+|---|---|---|
+| Koruma katmanı | Kendi API anahtarımız (`TT_API_KEYS`, cihaz başına bir tane) | Kullanıcı tercihi: kurulum tamamen bizde, Cloudflare paneline bağımlılık yok. **Bedeli:** anahtarsız istek Cloudflare'de değil bizim kodumuzda reddedilir (PocketBase sürecine ulaşır). Bu yüzden kontrol en yüksek öncelikli ara katmandadır, `/_/` ayrıca tünelde kesilir ve hız sınırlayıcı açıktır. |
+| Anahtar ne zaman zorunlu | Yalnızca tünelden gelen isteklerde (`CF-Connecting-IP` var) | Yerel geliştirme ve sunucunun kendi loopback'i anahtarsız kalır; port yalnızca `127.0.0.1`'de olduğundan o yola makineye erişimi olan ulaşır. Başlığı taklit etmek kuralı yalnızca sıkılaştırır. |
+| Yanıt kodu | `403` (oturum hatası `401`'den ayrı) | Uygulama `401`'de oturumu kapatır; yanlış anahtar oturum sorunu değildir. |
+| Tünel | Ayrı tünel (`task-tracker`), compose içinde container olarak | Gitea'nın tüneline dokunulmaz; systemd/`sudo` gerekmez; PocketBase'e compose ağından ulaşır. |
+| Veri | `PB_DATA` ile açık klasör (`~/task-tracker/data`) | İmajdan bağımsız; yedek/taşıma düz dosya işi. Yerelde adlandırılmış volume kalır. |
+| Kod aktarımı | `rsync` (`scripts/deploy.sh`) | Proje şimdilik yalnızca yerelde; kullanıcı kendi git'ine sonra push edecek. |
+| Port | 8091 | 8090 ve 8080 sunucuda başka projelerde. |
+| Veri taşıma | Hazır ama **yapılmadı** (`scripts/migrate-data.sh`) | Kullanıcı önce Mac uygulamasını bir hafta yerelde kullanıp iyileştirecek. |
+
+**Elenenler:** `tailscale serve` (Tailscale sürekli açık olmalı) · Cloudflare Access (daha sıkı ama panel kurulumu ister; ileride önüne eklenebilir) · mevcut Gitea tüneline kural eklemek (çalışan tüneli yeniden başlatmak gerekirdi).
+
 ## Ertelenen kararlar
 
 - **Android teknolojisi** (Kotlin/Compose varsayılan aday) — Mac tasarımı oturduktan sonra.
-- **Telefonun server'a erişimi** — Tailscale always-on mı, Cloudflare Tunnel mı (telefonun Tailscale'i 28 gündür kapalıydı).
+- ~~Telefonun server'a erişimi~~ — madde 14 ile çözüldü: Cloudflare Tunnel + cihaza özel API anahtarı.
 - Oturum geçmişi (`focus_sessions`), masaüstü widget'ı, WYSIWYG not editörü, offline.

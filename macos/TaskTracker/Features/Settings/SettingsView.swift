@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(AppState.self) private var app
 
     @State private var server = ""
+    @State private var apiKey = ""
     @State private var serverMessage: String?
     @State private var isChecking = false
     @State private var loginItemEnabled = LoginItem.isEnabled
@@ -25,7 +26,10 @@ struct SettingsView: View {
             .frame(maxWidth: 720, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .onAppear { server = app.settings.serverAddress }
+        .onAppear {
+            server = app.settings.serverAddress
+            apiKey = app.settings.apiKey
+        }
     }
 
     // MARK: Sunucu
@@ -35,11 +39,12 @@ struct SettingsView: View {
             InkSectionLabel("SUNUCU")
             InkRule()
             InkField(label: "ADRES", text: $server, onSubmit: connect)
+            InkField(label: "API ANAHTARI · yalnızca internete açık sunucuda", text: $apiKey, secure: true, onSubmit: connect)
             HStack(spacing: 12) {
                 Button(isChecking ? "deneniyor…" : "bağlan", action: connect)
                     .buttonStyle(InkButtonStyle())
-                    .disabled(isChecking || server == app.settings.serverAddress)
-                Text("adres değişince yeniden giriş gerekir").font(Theme.font(Theme.Size.small)).foregroundStyle(Theme.ink2)
+                    .disabled(isChecking || !hasServerChanges)
+                Text("adres ya da anahtar değişince yeniden giriş gerekir").font(Theme.font(Theme.Size.small)).foregroundStyle(Theme.ink2)
             }
             if let serverMessage { Text("? " + serverMessage).fixedSize(horizontal: false, vertical: true) }
             HStack(spacing: 12) {
@@ -51,11 +56,13 @@ struct SettingsView: View {
         }
     }
 
+    private var hasServerChanges: Bool { server != app.settings.serverAddress || apiKey != app.settings.apiKey }
+
     private func connect() {
-        guard !isChecking, server != app.settings.serverAddress else { return }
+        guard !isChecking, hasServerChanges else { return }
         isChecking = true
         Task {
-            serverMessage = await app.changeServer(to: server)
+            serverMessage = await app.changeServer(to: server, apiKey: apiKey)
             isChecking = false
         }
     }

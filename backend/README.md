@@ -8,13 +8,15 @@ entrypoint.sh         superuser upsert → serve
 docker-compose.yml    port yalnızca 127.0.0.1 · pb_data named volume · hooks/migrations salt-okunur bağlı
 pb_migrations/        şema — değişiklik = yeni dosya
 pb_hooks/
-  main.pb.js          401 koruması + .env'den kullanıcı oluşturma
+  main.pb.js          API anahtarı kapısı · 401 koruması · .env'den kullanıcı · public ayarlar (hız sınırı, yedek)
+  quicknote.pb.js     /api/quicknote, /api/quicknote/preview
   quickadd.pb.js      /api/quickadd, /api/quickadd/preview
   views.pb.js         /api/views/focus | week | projects
   triage.pb.js        /api/triage/{id}
   focus.pb.js         /api/focus…
   tasks.pb.js         completed_at + aktif task'ı boşaltma kuralları
   lib/parser.js       hızlı ekleme parser'ı (saf; Node'da da çalışır)
+  lib/notes.js        hızlı not ayrıştırıcısı (saf)
   lib/dates.js        YYYY-MM-DD aritmetiği, "bugün"
   lib/store.js        ortak DB yardımcıları
 tests/unit/           parser testleri (sunucu gerekmez)
@@ -33,6 +35,12 @@ docker compose up -d --build
 - Uygulama kullanıcısı (`TT_USER_*`) ilk açılışta oluşturulur. Sonradan parola değiştirmek için Admin UI kullanılır (`.env`'deki değer yalnızca ilk oluşturmada okunur; superuser ise her açılışta `.env`'den güncellenir).
 - `pb_hooks` ya da `pb_migrations` değişince: `docker compose restart`
 - Loglar: `docker compose logs -f`
+
+## Sunucu
+
+Sunucu kurulumu, API anahtarı, tünel, yedekler ve veri taşıma: [../docs/DEPLOY.md](../docs/DEPLOY.md). Güncelleme göndermek: `../scripts/deploy.sh`.
+
+`.env` değişince `docker compose restart` **yetmez** (ortam değişkenleri yeniden okunmaz): `docker compose up -d`.
 
 ## Testler
 

@@ -14,6 +14,7 @@ Kişisel, self-hosted **task + not sistemi**. Todoist'in yerine; tamamen modifiy
 | [docs/api.md](docs/api.md) | İki uygulamanın da uyduğu API sözleşmesi (`curl` örnekleriyle) |
 | [docs/data-model.md](docs/data-model.md) | Koleksiyonlar ve alanlar |
 | [backend/README.md](backend/README.md) | Backend'i çalıştırma, testler, sürüm yükseltme |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | Sunucu kurulumu: Cloudflare Tunnel, API anahtarı, güncelleme, veri taşıma, yedekler |
 | [macos/README.md](macos/README.md) | Mac uygulaması: çalıştırma, kısayollar, mimari, yeni aksiyon/görünüm ekleme rehberi |
 
 ```
@@ -29,15 +30,16 @@ docs/      plan, kararlar, tasarım, API sözleşmesi
 | Faz | Durum |
 |---|---|
 | 0 · İskelet | ✅ |
-| 1 · Backend | ✅ birim 39/39, API 18/18 |
-| 2 · macOS | **adım 1–4 ✅** (tüm görünümler + hızlı not `⌃⌥N`) — yüzen mini/liste paneli (`⌃⌥M` / `⌃⌥L`) + zamanlayıcı; öncesi: giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar, aksiyon kaydı, tam ekran (`⌃⌘F`), menü çubuğu öğesi (`▸ 3/7`), otomatik başlama, `⌘K` komut paleti, `?` yardım. Core paketi 18/18 (canlı sözleşme testleri dahil). |
-| 3 · Android · 4 · Deploy | sırada değil |
+| 1 · Backend | ✅ birim 39/39, API 19/19 |
+| 2 · macOS | **adım 1–4 ✅** (tüm görünümler + hızlı not `⌃⌥N`) — yüzen mini/liste paneli (`⌃⌥M` / `⌃⌥L`) + zamanlayıcı; öncesi: giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar, aksiyon kaydı, tam ekran (`⌃⌘F`), menü çubuğu öğesi (`▸ 3/7`), otomatik başlama, `⌘K` komut paleti, `?` yardım. Core paketi 19/19 — yerel sunucuya **ve** internet adresine karşı. |
+| 4 · Deploy | **altyapı ✅** — sunucuda çalışıyor: `https://tasks.example.com` (Cloudflare Tunnel + API anahtarı). Veri henüz taşınmadı. → [docs/DEPLOY.md](docs/DEPLOY.md) |
+| 3 · Android | ertelendi |
 
 Tasarım: [docs/DESIGN.md](docs/DESIGN.md) + görsel taslak tuvali (bağlantısı dokümanın başında).
 
 ### Devam ederken ilk adım
 
-**Faz 2'nin planlanan dört adımı + task düzenleme tamam.** Plan: Mac uygulaması bir hafta gerçek kullanımda incelenip iyileştirilecek; ardından **Faz 4 (sunucuya deploy)**. Faz 3 (Android) ertelendi. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
+**Faz 2'nin planlanan dört adımı + task düzenleme tamam.** Plan: Mac uygulaması bir hafta **yerel sunucuyla** gerçek kullanımda incelenip iyileştirilecek; hafta sonunda `scripts/migrate-data.sh` ile veri sunucuya taşınıp uygulamanın adresi değiştirilecek. Faz 3 (Android) ertelendi. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
 
 ### Mac uygulamasını çalıştırma
 

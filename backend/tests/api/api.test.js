@@ -75,6 +75,24 @@ test("girişsiz her endpoint 401 döner", async () => {
     }
 })
 
+test("API anahtarı: tünelden gelen istek anahtarsız 403, anahtarla geçer; yerel istek etkilenmez", { skip: !env.TT_API_KEYS }, async () => {
+    const key = env.TT_API_KEYS.split(",")[0].trim()
+    const viaTunnel = (headers) => fetch(BASE + "/api/health", { headers: { "CF-Connecting-IP": "203.0.113.7", ...headers } })
+
+    assert.equal((await viaTunnel({})).status, 403)
+    assert.equal((await viaTunnel({ "X-API-Key": "yanlis-anahtar" })).status, 403)
+    assert.equal((await viaTunnel({ "X-API-Key": key.slice(0, -1) })).status, 403)
+    assert.equal((await viaTunnel({ "X-API-Key": key })).status, 200)
+    // giriş uç noktası da kapının arkasında
+    const login = await fetch(BASE + "/api/collections/users/auth-with-password", {
+        method: "POST", headers: { "Content-Type": "application/json", "CF-Connecting-IP": "203.0.113.7" },
+        body: JSON.stringify({ identity: env.TT_USER_EMAIL, password: env.TT_USER_PASSWORD }),
+    })
+    assert.equal(login.status, 403)
+    // tünelden geçmeyen (yerel) istek anahtarsız çalışır
+    assert.equal((await fetch(BASE + "/api/health")).status, 200)
+})
+
 test("kayıt (sign-up) kapalı", async () => {
     const r = await api("POST", "/api/collections/users/records",
         { email: "x@example.com", password: "12345678ab", passwordConfirm: "12345678ab" }, false)

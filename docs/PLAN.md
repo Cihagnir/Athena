@@ -21,7 +21,7 @@ Todoist (ve genel olarak hazır araçlar) zamanla yetmiyor; hedef, **tamamen mod
 | İstemciler | **İki ayrı native uygulama** — platform başına yoğun özelleştirme yapılacağı için. **macOS: Swift + SwiftUI (kesinleşti)**; Android teknolojisi Mac tasarımı netleşince ayrıca kararlaştırılacak. **Önce Mac.** |
 | Not ↔ Task | İki ayrı alan, gevşek bağ |
 | Offline | Yok — online yeterli |
-| Erişim | Şimdilik yalnızca Tailscale; public yüzey yok |
+| Erişim | ~~Yalnızca Tailscale~~ → Cloudflare Tunnel (`tasks.example.com`) + API anahtarı — [DEPLOY.md](DEPLOY.md) |
 | Görsel dil | **"E-ink"**: açık + ters koyu mod, saf monokrom, monospace, hareketsiz → [DESIGN.md](DESIGN.md) |
 
 ### Ortam tespiti
@@ -175,7 +175,10 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 
 Faz 2 ve 3 yalnızca `docs/api.md`'ye bağımlı; sıraları değiştirilebilir ya da paralel yürütülebilir.
 
-### Faz 4 — Deploy ve geçiş
+### Faz 4 — Deploy ve geçiş — altyapı ✅ *(2026-09-21)*, veri taşıma bekliyor
+
+> Aşağıdaki ilk plan `tailscale serve` öngörüyordu; uygulanan kurulum Cloudflare Tunnel + API anahtarıdır → [DEPLOY.md](DEPLOY.md). Kalan: `scripts/migrate-data.sh` (bir haftalık kullanım sonunda), sunucu dışı yedek, Todoist import'u.
+
 1. `<sunucu>` ayağa kalkınca: compose + migrations + hooks aktarımı, `tailscale serve` ile tailnet içi gerçek HTTPS, `pb_data` için zamanlanmış yedek.
 2. Uygulamalarda server adresi ayarlardan değiştirilebilir (yerel → `https://<sunucu>.<tailnet>.ts.net`).
 3. `scripts/import-todoist.ts` — Todoist REST API → PocketBase. Todoist hesabı geçiş tamamlanana kadar silinmez.

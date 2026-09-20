@@ -11,12 +11,12 @@ final class Backend {
     var lastError: String?
     var onUnauthorized: () -> Void = {}
 
-    init(url: URL, token: String?) {
-        api = APIClient(baseURL: url, token: token)
+    init(url: URL, token: String?, apiKey: String) {
+        api = APIClient(baseURL: url, token: token, apiKey: apiKey)
     }
 
-    func configure(url: URL, token: String?) {
-        api = APIClient(baseURL: url, token: token)
+    func configure(url: URL, token: String?, apiKey: String) {
+        api = APIClient(baseURL: url, token: token, apiKey: apiKey)
     }
 
     /// İsteği çalıştırır; hata olursa `nil` döner ve hatayı raporlar.

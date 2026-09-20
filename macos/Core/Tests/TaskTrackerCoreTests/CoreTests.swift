@@ -21,6 +21,17 @@ import Testing
     }
 }
 
+@Suite struct RequestTests {
+    @Test func everyRequestCarriesTokenAndAPIKey() {
+        let api = APIClient(baseURL: URL(string: "https://tasks.example.com")!, token: "tok", apiKey: "anahtar")
+        let request = api.makeRequest("GET", "/api/realtime")
+        #expect(request.value(forHTTPHeaderField: "X-API-Key") == "anahtar")
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "tok")
+        #expect(api.with(token: nil).makeRequest("POST", "/x").value(forHTTPHeaderField: "X-API-Key") == "anahtar")
+        #expect(APIClient(baseURL: api.baseURL, apiKey: "").makeRequest("GET", "/x").value(forHTTPHeaderField: "X-API-Key") == nil)
+    }
+}
+
 @Suite struct NoteTests {
     @Test func splitsEditorTextIntoTitleAndBody() {
         #expect(Note.split("Başlık\nsatır 1\n\nsatır 2\n") == ("Başlık", "satır 1\n\nsatır 2"))
@@ -97,18 +108,17 @@ import Testing
 
 /// Çalışan backend'e karşı sözleşme testi. Ortam değişkenleri yoksa atlanır:
 ///   TT_URL=http://127.0.0.1:8090 TT_EMAIL=… TT_PASSWORD=… swift test
+/// İnternete açık sunucuya karşı ayrıca TT_API_KEY=… verilir.
 @Suite(.enabled(if: ProcessInfo.processInfo.environment["TT_URL"] != nil), .serialized)
 struct LiveAPITests {
     let env = ProcessInfo.processInfo.environment
 
-    func client() async throws -> APIClient {
-        let anonymous = APIClient(baseURL: URL(string: env["TT_URL"]!)!)
-        let auth = try await anonymous.login(email: env["TT_EMAIL"]!, password: env["TT_PASSWORD"]!)
-        return anonymous.with(token: auth.token)
-    }
+    /// Tek giriş, bütün testler paylaşır: internete açık sunucuda giriş uç noktası hız
+    /// sınırlıdır (3 sn'de 2 deneme) — uygulama da zaten bir kez giriş yapar.
+    func client() async throws -> APIClient { try await SharedSession.shared.client(env) }
 
     @Test func rejectsAnonymousAndBadPassword() async throws {
-        let anonymous = APIClient(baseURL: URL(string: env["TT_URL"]!)!)
+        let anonymous = APIClient(baseURL: URL(string: env["TT_URL"]!)!, apiKey: env["TT_API_KEY"])
         try await anonymous.health()
         await #expect(throws: APIError.unauthorized) { _ = try await anonymous.focusView() }
         await #expect(throws: APIError.self) { _ = try await anonymous.login(email: env["TT_EMAIL"]!, password: "yanlış-parola") }
@@ -280,6 +290,20 @@ struct LiveAPITests {
         let event = try await withTimeout(seconds: 5) { try await listener.value }
         #expect(event == RealtimeEvent(topic: "tasks", action: "create", recordID: added.task.id))
         try await api.deleteTask(added.task.id)
+    }
+}
+
+actor SharedSession {
+    static let shared = SharedSession()
+    private var cached: APIClient?
+
+    func client(_ env: [String: String]) async throws -> APIClient {
+        if let cached { return cached }
+        let anonymous = APIClient(baseURL: URL(string: env["TT_URL"]!)!, apiKey: env["TT_API_KEY"])
+        let auth = try await anonymous.login(email: env["TT_EMAIL"]!, password: env["TT_PASSWORD"]!)
+        let client = anonymous.with(token: auth.token)
+        cached = client
+        return client
     }
 }
 

@@ -8,10 +8,12 @@ services:
     environment:
       TZ: ${TZ:-Europe/Istanbul}
     ports:
-      # Yalnızca loopback; dışarıya açılım Faz 4'te `tailscale serve` ile.
+      # Yalnızca loopback. Sunucuda dışarıya açılım aşağıdaki tünel servisiyle (docs/DEPLOY.md).
       - "127.0.0.1:${PB_PORT:-8090}:8090"
     volumes:
-      - pb_data:/pb/pb_data
+      # Veri imajdan bağımsızdır. Yerelde adlandırılmış volume; sunucuda PB_DATA ile açık bir
+      # klasöre bağlanır (yedekleme/taşıma düz dosya işi olsun diye).
+      - ${PB_DATA:-pb_data}:/pb/pb_data
       - ./pb_migrations:/pb/pb_migrations:ro
       - ./pb_hooks:/pb/pb_hooks:ro
     healthcheck:
@@ -19,6 +21,19 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  # Cloudflare Tunnel — yalnızca sunucuda: `docker compose --profile tunnel up -d`.
+  # Yapılandırma ve kimlik dosyası ./tunnel altında (repoya girmez); bkz. docs/DEPLOY.md.
+  tunnel:
+    image: cloudflare/cloudflared:2026.7.3
+    profiles: [tunnel]
+    container_name: task-tracker-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./tunnel:/etc/cloudflared:ro
+    depends_on:
+      - pocketbase
 
 volumes:
   pb_data:

@@ -76,7 +76,7 @@ final class AppState {
     private var realtimeTask: Task<Void, Never>?
 
     init() {
-        backend = Backend(url: settings.serverURL, token: settings.token)
+        backend = Backend(url: settings.serverURL, token: settings.token, apiKey: settings.apiKey)
         today = TodayStore(backend: backend)
         projects = ProjectStore(backend: backend)
         active = ActiveTaskStore(backend: backend)
@@ -126,11 +126,13 @@ final class AppState {
     }
 
     /// Başarısızsa hata mesajını döndürür.
-    func login(server: String, email: String, password: String) async -> String? {
+    func login(server: String, apiKey: String, email: String, password: String) async -> String? {
         guard let url = AppSettings.normalizedURL(server) else { return "Adres http:// ya da https:// ile başlamalı." }
+        let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            let session = try await APIClient(baseURL: url).login(email: email, password: password)
+            let session = try await APIClient(baseURL: url, apiKey: key).login(email: email, password: password)
             settings.serverAddress = url.absoluteString
+            settings.apiKey = key
             settings.email = email
             beginSession(session)
             return nil
@@ -148,21 +150,23 @@ final class AppState {
 
     /// Sunucu adresi değişince: token o sunucuya ait olduğu için oturum kapanır.
     /// Başarısızsa hata mesajını döndürür.
-    func changeServer(to address: String) async -> String? {
+    func changeServer(to address: String, apiKey: String) async -> String? {
         guard let url = AppSettings.normalizedURL(address) else { return "Adres http:// ya da https:// ile başlamalı." }
+        let key = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            try await APIClient(baseURL: url).health()
+            try await APIClient(baseURL: url, apiKey: key).health()
         } catch {
             return error.localizedDescription
         }
         settings.serverAddress = url.absoluteString
+        settings.apiKey = key
         endSession(message: nil)
         return nil
     }
 
     private func beginSession(_ session: AuthSession) {
         settings.token = session.token
-        backend.configure(url: settings.serverURL, token: session.token)
+        backend.configure(url: settings.serverURL, token: session.token, apiKey: settings.apiKey)
         backend.lastError = nil
         phase = .loggedIn
         realtimeTask?.cancel()
@@ -220,7 +224,7 @@ final class AppState {
         realtimeTask?.cancel()
         realtimeTask = nil
         settings.token = nil
-        backend.configure(url: settings.serverURL, token: nil)
+        backend.configure(url: settings.serverURL, token: nil, apiKey: settings.apiKey)
         backend.lastError = message
         today.reset()
         week.reset()
