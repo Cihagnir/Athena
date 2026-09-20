@@ -43,7 +43,7 @@ enum Theme {
     /// Köşede sürekli duran panel yumuşak görünsün diye köşeleri yuvarlaktır.
     static let panelRadius: CGFloat = 10
     /// Pasifken (klavyeyi dinlemiyorken) arkasındaki içeriği hafifçe gösterir.
-    static let panelPassiveOpacity = 0.7
+    static let panelPassiveOpacity = 0.85
 
     private static func dynamic(light: Int, dark: Int) -> NSColor {
         NSColor(name: nil) { appearance in

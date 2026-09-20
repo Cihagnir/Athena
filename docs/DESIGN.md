@@ -64,7 +64,7 @@ Renk olmadığı için her anlamın sabit bir biçimi vardır:
 
 - **Çizgi:** 1 px `ink` (çerçeve) ya da 1 px `ink3` (liste ayraçları). Köşe yarıçapı **0** (yüzen panel hariç).
 - **Hızlı ekleme paneli:** opak `paper`, 2 px `ink` çerçeve, kare köşe, gölge kapalı, başlık çubuğu yok.
-- **Yüzen panel (mini + liste) — bilinçli istisna** *(kullanıcı kararı, 2026-09-20)*: bütün gün köşede, başka uygulamaların üstünde durduğu için daha yumuşak: köşe yarıçapı **10**; **pasifken %70 opak** (arkası hafifçe görünür), klavyeyi dinlerken **tam opak** + 2 px çerçeve. Geçiş anlıktır; gölge ve blur yine yok. Değerler `Theme.panelRadius` / `Theme.panelPassiveOpacity`.
+- **Yüzen panel (mini + liste) — bilinçli istisna** *(kullanıcı kararı, 2026-09-20)*: bütün gün köşede, başka uygulamaların üstünde durduğu için daha yumuşak: köşe yarıçapı **10**; **pasifken %85 opak** (arkası hafifçe görünür), klavyeyi dinlerken **tam opak** + 2 px çerçeve. Geçiş anlıktır; gölge ve blur yine yok. Değerler `Theme.panelRadius` / `Theme.panelPassiveOpacity`.
 - **Zamanlayıcı:** geriye doğru azalan dolu `ink` çubuk; akıcı değil **kademeli** küçülür (e-ink yenilemesi gibi, birkaç saniyede bir adım). Rakam yok.
 - **Odak halkası:** sistem mavi halkası kapatılır; odak = 2 px `ink` çerçeve ya da ters çevirme.
 - **Buton:** varsa köşeli parantezli metin — `[ekle]`; basılıyken ters çevrilir. Çoğu ekranda hiç yoktur.

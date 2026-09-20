@@ -243,7 +243,7 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 | `NSAllowsArbitraryLoads` | karar | Sunucu yerelde / tailnet IP'sinde düz `http` olabilir. Faz 4'te `https` adresine geçince daraltılabilir. |
 | App Sandbox kapalı | karar | Kişisel araç; global kısayol ve ileride panel davranışları için gereksiz sürtünme. |
 | İyimser güncelleme yok | karar | Yukarıda — tutarlılık > milisaniyeler. |
-| Yüzen panel yuvarlak + pasifken saydam | karar | Kullanıcı isteği: köşede sürekli duran panel daha yumuşak dursun. "Saydamlık yok / köşe 0" kurallarının tek istisnası; değerler `Theme.panelRadius` (10) ve `Theme.panelPassiveOpacity` (0.7). Hızlı ekleme paneli kare ve opak kalır. |
+| Yüzen panel yuvarlak + pasifken saydam | karar | Kullanıcı isteği: köşede sürekli duran panel daha yumuşak dursun. "Saydamlık yok / köşe 0" kurallarının tek istisnası; değerler `Theme.panelRadius` (10) ve `Theme.panelPassiveOpacity` (0.85). Hızlı ekleme paneli kare ve opak kalır. |
 | Pencere köşeleri yuvarlak | **sapma** | macOS başlıklı pencerelerde köşeyi sistem çizer. Kare köşe için ana pencereyi de çerçevesiz `NSWindow`'a çevirmek gerekir (boyutlandırma/taşıma elle yazılır) — ertelendi. Hızlı ekleme paneli çerçevesiz olduğu için kare. |
 | Blok imleç `█` yok | **sapma** | `NSTextView`'ın ekleme imleci artık sistem bileşeni; özelleştirmek kırılgan. İmleç `ink` renginde ince çizgi. |
 | Kısayol kaydedici kutusu | **sapma** | `KeyboardShortcuts.Recorder` paketin kendi (yuvarlak, İngilizce "Record Shortcut") bileşeni. Tema içi bir kaydedici adım 2'de yazılabilir. |
