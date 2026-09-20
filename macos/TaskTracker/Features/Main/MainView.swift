@@ -68,11 +68,9 @@ struct MainView: View {
         case .triage: TriageView()
         case .week: WeekScreen()
         case .kanban: KanbanView()
+        case .projects: ProjectsView()
+        case .notes: NotesView()
         case .settings: SettingsView().keyboardFocus(unless: app.overlay != nil)
-        default:
-            Text("\(app.route.title.lowercased()) · yakında").foregroundStyle(Theme.ink3)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .keyboardFocus(unless: app.overlay != nil)
         }
     }
 }

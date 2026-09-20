@@ -6,7 +6,7 @@ import SwiftUI
 /// bağlamı) ve Ayarlar'da görünür, global kısayol atanabilir olur.
 enum AppActions {
     static func all(for app: AppState) -> [AppAction] {
-        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + week(app) + kanban(app) + miniPanel(app) + listPanel(app) + quickAddDocs
+        global(app) + mainWindow(app) + anyView(app) + todayList(app) + triage(app) + week(app) + kanban(app) + projects(app) + notes(app) + miniPanel(app) + listPanel(app) + quickAddDocs
     }
 
     private static func global(_ app: AppState) -> [AppAction] {
@@ -15,6 +15,11 @@ enum AppActions {
                       defaultGlobal: .init(.space, modifiers: [.control, .option])) { [weak app] in
                 guard let app, app.phase == .loggedIn else { app?.showMainWindow(); return }
                 app.quickAdd.toggle()
+            },
+            AppAction(id: "quickNote.toggle", title: "Hızlı not panelini aç / kapat", context: .global,
+                      defaultGlobal: .init(.n, modifiers: [.control, .option])) { [weak app] in
+                guard let app, app.phase == .loggedIn else { app?.showMainWindow(); return }
+                app.quickNote.toggle()
             },
             AppAction(id: "panel.listen", title: "Mini panel: klavyeyi ver / bırak", context: .global,
                       defaultGlobal: .init(.m, modifiers: [.control, .option])) { [weak app] in
@@ -196,6 +201,53 @@ enum AppActions {
                 app.active.toggle(task)
             },
             action("escape", "Açıklamayı kapat", [KeyBinding(key: .escape, display: "esc")]) { store.showsDetails = false },
+        ]
+    }
+
+    private static func projects(_ app: AppState) -> [AppAction] {
+        let store = app.projectsScreen
+        func action(_ id: String, _ title: String, _ keys: [KeyBinding], _ perform: @escaping () -> Void) -> AppAction {
+            AppAction(id: "projects." + id, title: title, context: .projects, keys: keys, showsInPalette: false, perform: perform)
+        }
+        // Onay modunda yalnızca ↵ ve esc anlamlıdır.
+        func browsing(_ work: @escaping () -> Void) -> () -> Void { { if store.mode == .browse { work() } } }
+        return [
+            action("down", "Aşağı", [KeyBinding(key: .downArrow, display: "↓"), KeyBinding(key: "j", display: "J")], browsing { store.moveSelection(1) }),
+            action("up", "Yukarı", [KeyBinding(key: .upArrow, display: "↑"), KeyBinding(key: "k", display: "K")], browsing { store.moveSelection(-1) }),
+            action("new", "Yeni proje", [KeyBinding(key: "n", display: "N")], browsing { store.beginCreating() }),
+            action("edit", "Tanımı düzenle", [KeyBinding(key: "e", display: "E"), KeyBinding(key: .return, display: "↵")]) {
+                if store.mode == .confirmDelete { store.confirmDelete() } else if store.mode == .browse { store.beginEditing() }
+            },
+            action("rename", "Yeniden adlandır", [KeyBinding(key: "r", display: "R")], browsing { store.beginRenaming() }),
+            action("status", "Durum: aktif → beklemede → bitti", [KeyBinding(key: "s", display: "S")], browsing { store.cycleStatus() }),
+            action("area", "Alan: iş ↔ kişisel", [KeyBinding(key: "a", display: "A")], browsing { store.toggleArea() }),
+            action("delete", "Sil (↵ ile onaylanır)", [KeyBinding(key: .delete, display: "⌫")], browsing { store.beginDelete() }),
+            action("escape", "Vazgeç", [KeyBinding(key: .escape, display: "esc")]) { store.cancel() },
+        ]
+    }
+
+    private static func notes(_ app: AppState) -> [AppAction] {
+        let store = app.notes
+        func action(_ id: String, _ title: String, _ keys: [KeyBinding], _ perform: @escaping () -> Void) -> AppAction {
+            AppAction(id: "notes." + id, title: title, context: .notes, keys: keys, showsInPalette: false, perform: perform)
+        }
+        func browsing(_ work: @escaping () -> Void) -> () -> Void { { if store.mode == .browse { work() } } }
+        return [
+            action("right", "Sonraki not", [KeyBinding(key: .rightArrow, display: "→"), KeyBinding(key: "l", display: "L")], browsing { store.moveSelection(1) }),
+            action("left", "Önceki not", [KeyBinding(key: .leftArrow, display: "←"), KeyBinding(key: "h", display: "H")], browsing { store.moveSelection(-1) }),
+            action("down", "Alt satır", [KeyBinding(key: .downArrow, display: "↓"), KeyBinding(key: "j", display: "J")], browsing { store.moveRow(1) }),
+            action("up", "Üst satır", [KeyBinding(key: .upArrow, display: "↑"), KeyBinding(key: "k", display: "K")], browsing { store.moveRow(-1) }),
+            action("open", "Aç / düzenle", [KeyBinding(key: .return, display: "↵"), KeyBinding(key: "e", display: "E")]) {
+                if store.mode == .confirmDelete { store.confirmDelete() } else if store.mode == .browse { store.openSelected() }
+            },
+            action("new", "Yeni not", [KeyBinding(key: "n", display: "N")], browsing { store.beginNew() }),
+            action("pin", "Sabitle / bırak", [KeyBinding(key: "p", display: "P")], browsing { store.togglePinned() }),
+            action("filter", "Proje filtresi", [KeyBinding(key: .tab, display: "⇥")], browsing { store.cycleFilter() }),
+            action("search", "Ara", [KeyBinding(key: "/", display: "/")], browsing { store.beginSearch() }),
+            action("delete", "Sil (↵ ile onaylanır)", [KeyBinding(key: .delete, display: "⌫")], browsing { store.beginDelete() }),
+            action("escape", "Vazgeç / aramayı temizle", [KeyBinding(key: .escape, display: "esc")]) {
+                if store.mode == .confirmDelete { store.cancel() } else if !store.query.isEmpty { store.endSearch(clear: true) }
+            },
         ]
     }
 

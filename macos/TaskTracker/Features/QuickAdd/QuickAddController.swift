@@ -43,7 +43,7 @@ final class QuickAddController {
     func show() {
         let panel = panel ?? makePanel()
         self.panel = panel
-        position(panel)
+        panel.placeSpotlight()
         panel.makeKeyAndOrderFront(nil)
         focus(.title)
     }
@@ -56,15 +56,6 @@ final class QuickAddController {
         let panel = QuickAddPanel(contentRect: NSRect(x: 0, y: 0, width: Self.width, height: 420))
         panel.contentView = NSHostingView(rootView: QuickAddView(model: self))
         return panel
-    }
-
-    /// Yatayda ortada, üstten ekranın ~%22'si (Spotlight konumu). Panel içeriği
-    /// yukarı yaslıdır; pencerenin kalanı saydam ve tıklamaları geçirir.
-    private func position(_ panel: NSPanel) {
-        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
-        let area = screen.visibleFrame
-        let top = area.maxY - area.height * 0.22
-        panel.setFrameOrigin(NSPoint(x: area.midX - panel.frame.width / 2, y: top - panel.frame.height))
     }
 
     // MARK: Alanlar
@@ -139,4 +130,13 @@ final class QuickAddPanel: NSPanel {
     }
 
     override var canBecomeKey: Bool { true }
+
+    /// Yatayda ortada, üstten ekranın ~%22'si (Spotlight konumu). Panel içeriği
+    /// yukarı yaslıdır; pencerenin kalanı saydam ve tıklamaları geçirir.
+    func placeSpotlight() {
+        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return }
+        let area = screen.visibleFrame
+        let top = area.maxY - area.height * 0.22
+        setFrameOrigin(NSPoint(x: area.midX - frame.width / 2, y: top - frame.height))
+    }
 }

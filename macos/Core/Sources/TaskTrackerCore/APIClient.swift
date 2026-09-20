@@ -80,6 +80,40 @@ public struct APIClient: Sendable {
                        body: ["name": name, "area": area.rawValue, "status": "active"])
     }
 
+    public func updateProject(_ id: String, _ patch: ProjectPatch) async throws -> Project {
+        try await send("PATCH", "/api/collections/projects/records/\(id)", body: patch)
+    }
+
+    // MARK: Notlar
+
+    /// Sabitlenenler önce, sonra en son güncellenen.
+    public func notes() async throws -> [Note] {
+        let page: Page<Note> = try await send("GET", "/api/collections/notes/records",
+                                              query: ["perPage": "500", "sort": "-pinned,-updated"])
+        return page.items
+    }
+
+    public func createNote(title: String, body: String, project: String = "") async throws -> Note {
+        try await send("POST", "/api/collections/notes/records",
+                       body: NotePatch(title: title, body: body, project: project, pinned: false))
+    }
+
+    public func updateNote(_ id: String, _ patch: NotePatch) async throws -> Note {
+        try await send("PATCH", "/api/collections/notes/records/\(id)", body: patch)
+    }
+
+    public func deleteNote(_ id: String) async throws {
+        try await sendIgnoringBody("DELETE", "/api/collections/notes/records/\(id)")
+    }
+
+    public func quickNotePreview(text: String) async throws -> ParsedNote {
+        try await send("POST", "/api/quicknote/preview", body: ["text": text])
+    }
+
+    public func quickNote(text: String) async throws -> QuickNoteResult {
+        try await send("POST", "/api/quicknote", body: ["text": text])
+    }
+
     public func deleteProject(_ id: String) async throws {
         try await sendIgnoringBody("DELETE", "/api/collections/projects/records/\(id)")
     }

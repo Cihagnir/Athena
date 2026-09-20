@@ -133,6 +133,24 @@ test("quickadd: son: → due_date, // → description, gövdedeki description ek
     assert.equal(c.task.scheduled_date, today, "projesiz + başlangıçsız → bugün")
 })
 
+test("quicknote: ilk satır başlık, #proje bağlar, gövde korunur; boş not 400", async () => {
+    const preview = await api("POST", "/api/quicknote/preview", { text: "zz-test not #zz-test-ev\nsatır 1\nsatır 2" })
+    assert.equal(preview.body.title, "zz-test not")
+    assert.equal(preview.body.project.name, "zz-test-Ev İşleri")
+    assert.equal(preview.body.body, "satır 1\nsatır 2")
+
+    const r = await api("POST", "/api/quicknote", { text: "zz-test not #zz-test-ev\nsatır 1\nsatır 2" })
+    assert.equal(r.status, 200, JSON.stringify(r.body))
+    assert.equal(r.body.note.title, "zz-test not")
+    assert.equal(r.body.note.project, created.projects[0])
+    assert.equal(r.body.note.body, "satır 1\nsatır 2")
+    assert.equal(r.body.note.pinned, false)
+
+    assert.equal((await api("POST", "/api/quicknote", { text: "  \n " })).status, 400)
+    assert.equal((await api("POST", "/api/quicknote", { text: "x" }, false)).status, 401)
+    assert.equal((await api("DELETE", `/api/collections/notes/records/${r.body.note.id}`)).status, 204)
+})
+
 test("quickadd: boş başlık 400", async () => {
     assert.equal((await api("POST", "/api/quickadd", { text: "yarın !1" })).status, 400)
     assert.equal((await api("POST", "/api/quickadd", {})).status, 400)

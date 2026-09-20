@@ -6,7 +6,7 @@ task_tracker'ın macOS uygulaması: Swift 6 + SwiftUI (gerektiği yerde AppKit),
 - Görsel dil (her ekranın uyduğu kurallar): [../docs/DESIGN.md](../docs/DESIGN.md)
 - Yol haritası: [../docs/PLAN.md](../docs/PLAN.md) → Faz 2
 
-**Durum:** Faz 2 / adım 1–3 + adım 4'ten **Triyaj, Hafta ve Kanban** tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
+**Durum:** Faz 2 / adım 1–3 + adım 4'ün **tamamı** (Triyaj, Hafta, Kanban, Projeler, Notlar + hızlı not) tamam — yüzen panel (mini + liste) ve zamanlayıcı dahil. Öncesi: giriş, Odak ekranı, hızlı ekleme paneli, Ayarlar, aksiyon kaydı, tam ekran, menü çubuğu öğesi, otomatik başlama, `⌘K` komut paleti, `?` kısayol yardımı. Sıradakiler en altta.
 
 ---
 
@@ -31,6 +31,7 @@ open build/Build/Products/Debug/TaskTracker.app
 | Nerede | Tuş | Ne yapar |
 |---|---|---|
 | Her yerden | `⌃⌥Space` | Hızlı ekleme panelini aç / kapat |
+| Her yerden | `⌃⌥N` | Hızlı not panelini aç / kapat: `↵` kaydet (panel açık kalır) · `⇧↵` yeni satır · ilk satır başlık · ilk satırdaki `#proje` bağlar · `esc` kapat |
 | Her yerden | `⌃⌥T` | Ana pencereyi göster |
 | Her yerden | `⌃⌥M` | Mini panel: klavyeyi ver / bırak (uygulama öne gelmez; çerçeve 2 px olur) |
 | Her yerden | `⌃⌥L` | Liste panelini aç / kapat (mini panelin yerinde açılır) |
@@ -72,6 +73,10 @@ open build/Build/Products/Debug/TaskTracker.app
 | Kanban | `↑↓` `←` `→` / `J K H L` | Kartlar ve sütunlar arasında gezin (boş sütun atlanır) |
 | Kanban | `⇧←` `⇧→` | Kartı önceki / sonraki duruma taşı: yapılacak ↔ yapılıyor ↔ engelli ↔ bitti. Fareyle sürükle-bırak da çalışır |
 | Kanban | `D` · `E` · `↵` | Tamamla / geri al · açıklamayı aç · aktif yap |
+| Projeler | `↑↓` · `N` · `E`/`↵` · `R` | Gezin · yeni proje (ad yaz, `↵`) · tanımı düzenle (yazarken kaydedilir, `esc` çıkar) · yeniden adlandır |
+| Projeler | `S` · `A` · `⌫` | Durum: aktif → beklemede → bitti · alan: iş ↔ kişisel · sil (`↵` ile onay; task ve notlar silinmez) |
+| Notlar | `↑↓` `←` `→` · `↵`/`E` · `N` | Izgarada gezin · notu aç / düzenle (ilk satır başlık, yazarken kaydedilir, `esc` döner) · yeni not |
+| Notlar | `P` · `⇥` · `/` · `⌫` | Sabitle / bırak · proje filtresi · ara (`↵` uygula, `esc` temizle) · sil (`↵` ile onay) |
 | Hızlı ekleme | `↵` | Ekle (panel açık kalır) |
 | Hızlı ekleme | `⇥` | Çok satırlı açıklama alanı ↔ başlık |
 | Hızlı ekleme | `⇧↵` | Açıklamada yeni satır |
@@ -116,10 +121,12 @@ TaskTracker/               uygulama hedefi
     TriageStore.swift      Triyaj kuyruğu, karar modları (tarih / proje / silme onayı)
     WeekStore.swift        Hafta görünümü: 7 gün + gecikenler, gün taşıma, haftalar arası gezinme
     KanbanStore.swift      Kanban: durum sütunları, kart/sütun gezinme, durum taşıma
+    ProjectsScreenStore.swift  Projeler görünümü: seçim + modlar (oluştur / adlandır / tanım / sil)
+    NotesStore.swift       Notlar: ızgara, proje filtresi, arama, editör (otomatik kayıt)
     SupportingStores.swift ProjectStore (adlar), ActiveTaskStore (aktif task + zamanlayıcı)
     InkTextView.swift      token vurgulu metin alanı (NSTextView); hızlı ekleme ve palet kullanır
   Features/
-    Login/ Main/ Today/ Triage/ Week/ Kanban/ QuickAdd/ Settings/
+    Login/ Main/ Today/ Triage/ Week/ Kanban/ Projects/ Notes/ QuickAdd/ QuickNote/ Settings/
     Overlays/              PaletteView (⌘K), HelpView (?) — ana pencerenin üstüne açılan katmanlar
     Panel/                 PanelController (durum + pencere), PanelView (mini ve liste içerikleri)
     MenuBar/               MenuBarMenu — menü çubuğu öğesinin menüsü
@@ -195,6 +202,15 @@ Veri iki çağrıdan birleşir: `APIClient.openTasks()` (bitmemiş **bütün** t
 - Klavyede gezinme (`←` `→`) ile taşıma (`⇧←` `⇧→`) ayrıdır. `KeyBinding.matches` Shift'i **yalnızca ok tuşlarında** ayırt eder; karakter tuşlarında yok sayar (`?` zaten Shift'le üretilir).
 - Sürükle-bırak: kart `.draggable(task.id)`, sütun `.dropDestination(for: String.self)`; ikisi de `KanbanStore.setStatus`'a düşer.
 
+### Projeler ve Notlar
+
+- **Projeler** şimdilik yalnızca proje + tanımdır (kullanıcı kararı): task sayısı, ilerleme ve projeye task bağlama ekranı yok. Proje verisi `ProjectStore`'da durur (satırlardaki `#ad` etiketleri de oradan okur); `ProjectsScreenStore` yalnızca seçim ve giriş modlarını tutar. Yeni proje kişisel alanla oluşur, `A` ile değişir.
+- **Otomatik kayıt:** proje tanımı ve not editöründe kaydet tuşu yoktur. Metin değişince 600–700 ms sonra `PATCH` gider; `esc` ile çıkarken bekleyen kayıt hemen yazılır. Not editörü açıkken realtime yenilemesi listeyi değiştirmez (yazılan metin ezilmesin).
+- **Not = tek metin:** editörde ilk dolu satır başlık, kalanı gövdedir (`Note.text` / `Note.split`, Core). Boş yeni not oluşturulmaz; ilk anlamlı kayıtta `POST` edilir. Bir proje filtresi seçiliyken açılan yeni not o projeye bağlanır.
+- **Izgara gezinme:** `←` `→` bir kart, `↑` `↓` bir satır (= sütun sayısı kadar) atlar; sütun sayısını görünüm genişlikten hesaplayıp store'a bildirir.
+- **Hızlı not** (`QuickNoteController`) hızlı eklemenin pencere sınıfını ve konumunu paylaşır (`QuickAddPanel.placeSpotlight`). Ayrıştırma sunucudadır: `/api/quicknote` — sözleşmesi `docs/api.md` → Hızlı not.
+- `InkTextView` artık uzun metin editörü olarak da kullanılıyor: `submitsOnReturn: false` iken `↵` yeni satır açar.
+
 ### Yüzen panel
 
 Tek pencere (`FloatingPanel`), iki biçim: `PanelController.mode` = `.mini` ya da `.list`. Liste, mini panelin **yerini alır** — aynı köşede, aynı pencerede; ikisi aynı anda görünmez.
@@ -264,7 +280,7 @@ Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etme
 
 ```sh
 TT_DEBUG_ROUTE=settings \
-TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded TT_DEBUG_TRIAGE=date \
+TT_DEBUG_QUICKNOTE='Başlık #proje\ngövde' TT_DEBUG_OVERLAY=palette TT_DEBUG_DETAILS=1 TT_DEBUG_PANEL=expanded TT_DEBUG_TRIAGE=date \
 TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma !1 // kısa not" \
   build/Build/Products/Debug/TaskTracker.app/Contents/MacOS/TaskTracker
 ```
@@ -296,6 +312,6 @@ Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/L
 
 ## Sıradakiler (PLAN.md → Faz 2)
 
-- **Adım 4 (devam):** ~~Triyaj~~ → ~~Hafta~~ → ~~Kanban~~ → Projeler → Notlar.
+- **Task düzenleme:** başlık, açıklama, tarihler, proje — detay bölümü şu an salt-okunur. Projeye task bağlama ve notu task'a bağlama (`tasks.note`) da bununla birlikte.
 - Yüzen panelde eksik kalanlar: `N` ile task'a not düşme, liste panelinde `/` filtre, `⌘↑/⌘↓` sıralama.
 - Odak listesinde eksik kalanlar: task'ı **düzenleme** (başlık, açıklama, tarihler — detay şimdilik salt-okunur), `⌘↑/⌘↓` ile sıralama, `/` filtre, task'a not düşme (`N`).

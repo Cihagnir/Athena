@@ -7,11 +7,14 @@ import TaskTrackerCore
 /// ofsetleri = `NSRange`) doğrudan alt çizgiye dönüşür.
 ///
 /// Tuşlar burada yakalanır: ↵ gönder · ⇧↵ yeni satır (çok satırlıda) · ⇥ alan
-/// değiştir · esc kapat.
+/// değiştir · esc kapat. Hızlı ekleme, hızlı not, palet, triyaj, proje ve not
+/// editörleri aynı bileşeni kullanır.
 struct InkTextView: NSViewRepresentable {
     @Binding var text: String
     var fontSize = Theme.Size.body
     var multiline = false
+    /// `false`: ↵ yeni satır açar (uzun metin editörleri); `true`: ↵ gönderir, ⇧↵ yeni satır.
+    var submitsOnReturn = true
     var tokens: [ParsedInput.Token] = []
     /// Değeri her değiştiğinde alan klavye odağını alır.
     var focusTrigger = 0
@@ -110,7 +113,7 @@ struct InkTextView: NSViewRepresentable {
             switch selector {
             case #selector(NSResponder.insertNewline(_:)):
                 let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
-                if parent.multiline && shift {
+                if parent.multiline && (shift || !parent.submitsOnReturn) {
                     textView.insertNewlineIgnoringFieldEditor(nil)
                 } else {
                     parent.onSubmit()

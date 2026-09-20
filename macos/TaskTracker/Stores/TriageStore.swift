@@ -127,7 +127,7 @@ final class TriageStore {
     /// Bitmemiş projeler + (tam eşleşme yoksa) "yeni proje" satırı.
     var projectChoices: [ProjectChoice] {
         let query = ActionRegistry.fold(projectQuery.trimmingCharacters(in: .whitespaces))
-        let all = projects.byID.values.filter { $0.status != "done" }.sorted { $0.name < $1.name }
+        let all = projects.byID.values.filter { $0.status != .done }.sorted { $0.name < $1.name }
         let matches = all.filter { query.isEmpty || ActionRegistry.fold($0.name).contains(query) }
         var choices = matches.map { ProjectChoice(project: $0, name: $0.name) }
         if !query.isEmpty, !all.contains(where: { ActionRegistry.fold($0.name) == query }) {

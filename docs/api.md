@@ -101,6 +101,40 @@ curl -s -X POST $PB/api/quickadd -H "Authorization: $TOKEN" \
 
 → `{ "task": <task kaydı>, "parsed": <preview ile aynı yapı> }`
 
+## Hızlı not
+
+Hızlı eklemenin not karşılığı; ayrıştırma yine sunucudadır (`backend/pb_hooks/lib/notes.js`):
+
+- **İlk dolu satır başlıktır**, kalanı gövde (gövdeye dokunulmaz). Tek satırlık notta gövde boştur.
+- İlk satırdaki ilk `#proje` notu projeye bağlar ve başlıktan çıkar; eşleşme kuralları hızlı eklemeyle aynıdır (Türkçe/büyük-küçük harf duyarsız, boşluk yerine `-`, tekil önek). Gövdedeki `#` bağ sayılmaz.
+- Eşleşmeyen `#proje` başlıkta kalır, `warnings: ["project_not_found"]` döner.
+- İlk satır 120 karakterden uzunsa başlık `…` ile kısaltılır ve tam metin gövdede korunur.
+- Boş not (ya da yalnızca çözülmüş `#proje`) → `400`.
+
+### `POST /api/quicknote/preview` · `POST /api/quicknote`
+
+```sh
+curl -s -X POST $PB/api/quicknote -H "Authorization: $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"text":"Yedek fikri #sunucu\nrestic + B2, ayda bir geri yükleme denemesi"}'
+```
+
+Preview yanıtı (kayıt oluşturmaz):
+
+```json
+{
+  "valid": true,
+  "title": "Yedek fikri",
+  "body": "restic + B2, ayda bir geri yükleme denemesi",
+  "project": { "id": "…", "name": "Sunucu altyapısı", "area": "work" },
+  "tokens": [ { "type": "project", "raw": "#sunucu", "start": 12, "end": 19, "value": { "id": "…" } } ],
+  "warnings": []
+}
+```
+
+`POST /api/quicknote` → `{ "note": <not kaydı>, "parsed": <yukarıdaki yapı> }`. Not `pinned: false` ile oluşur. Token ofsetleri hızlı eklemedeki gibi UTF-16'dır ve **tüm metne** göredir.
+
+Notların geri kalanı (listeleme, düzenleme, sabitleme, silme) standart koleksiyon REST'idir: `/api/collections/notes/records` — önerilen sıralama `sort=-pinned,-updated`.
+
 ## Görünümler
 
 ### `GET /api/views/focus?area=work|personal`

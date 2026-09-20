@@ -29,15 +29,15 @@ docs/      plan, kararlar, tasarım, API sözleşmesi
 | Faz | Durum |
 |---|---|
 | 0 · İskelet | ✅ |
-| 1 · Backend | ✅ parser 30/30, API 17/17 |
-| 2 · macOS | **adım 1–3 ✅ + Triyaj + Hafta + Kanban** — yüzen mini/liste paneli (`⌃⌥M` / `⌃⌥L`) + zamanlayıcı; öncesi: giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar, aksiyon kaydı, tam ekran (`⌃⌘F`), menü çubuğu öğesi (`▸ 3/7`), otomatik başlama, `⌘K` komut paleti, `?` yardım. Core paketi 15/15 (canlı sözleşme testleri dahil). Adım 4'ün kalanı sırada. |
+| 1 · Backend | ✅ birim 39/39, API 18/18 |
+| 2 · macOS | **adım 1–4 ✅** (tüm görünümler + hızlı not `⌃⌥N`) — yüzen mini/liste paneli (`⌃⌥M` / `⌃⌥L`) + zamanlayıcı; öncesi: giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar, aksiyon kaydı, tam ekran (`⌃⌘F`), menü çubuğu öğesi (`▸ 3/7`), otomatik başlama, `⌘K` komut paleti, `?` yardım. Core paketi 17/17 (canlı sözleşme testleri dahil). |
 | 3 · Android · 4 · Deploy | sırada değil |
 
 Tasarım: [docs/DESIGN.md](docs/DESIGN.md) + görsel taslak tuvali (bağlantısı dokümanın başında).
 
 ### Devam ederken ilk adım
 
-**Faz 2 / adım 4 (devam):** Projeler → Notlar (Triyaj, Hafta ve Kanban tamam). Ardından task düzenleme. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
+**Faz 2'nin planlanan dört adımı tamam.** Sıradaki aday işler: task düzenleme (detay şu an salt-okunur) · projeye task / task'a not bağlama · yüzen panelde `N` ile not düşme · ardından Faz 4 (sunucuya deploy) ve Faz 3 (Android). Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
 
 ### Mac uygulamasını çalıştırma
 

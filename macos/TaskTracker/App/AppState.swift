@@ -22,7 +22,7 @@ enum Route: String, CaseIterable, Identifiable {
 
     /// Kenar çubuğundaki ⌘1…⌘6 görünümleri (Ayarlar ayrı durur: ⌘,).
     static let views: [Route] = [.today, .triage, .week, .kanban, .projects, .notes]
-    var isImplemented: Bool { [.today, .triage, .week, .kanban, .settings].contains(self) }
+    var isImplemented: Bool { true }
 
     /// Görünümün kendi tuş bağlamı (`?` yardımında ilk sırada gösterilir).
     var context: ActionContext? {
@@ -31,7 +31,9 @@ enum Route: String, CaseIterable, Identifiable {
         case .triage: .triage
         case .week: .week
         case .kanban: .kanban
-        default: nil
+        case .projects: .projects
+        case .notes: .notes
+        case .settings: nil
         }
     }
 }
@@ -56,6 +58,9 @@ final class AppState {
     let triage: TriageStore
     let week: WeekStore
     let kanban: KanbanStore
+    let projectsScreen: ProjectsScreenStore
+    let notes: NotesStore
+    let quickNote: QuickNoteController
     let quickAdd: QuickAddController
     let panel: PanelController
 
@@ -77,6 +82,9 @@ final class AppState {
         triage = TriageStore(backend: backend, projects: projects)
         week = WeekStore(backend: backend)
         kanban = KanbanStore(backend: backend)
+        projectsScreen = ProjectsScreenStore(backend: backend, projects: projects)
+        notes = NotesStore(backend: backend, projects: projects)
+        quickNote = QuickNoteController(backend: backend)
         quickAdd = QuickAddController(backend: backend)
         panel = PanelController(settings: settings, active: active, today: today)
         backend.onUnauthorized = { [weak self] in self?.endSession(message: "Oturum süresi doldu, yeniden giriş yap.") }
@@ -160,6 +168,7 @@ final class AppState {
     ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help   TT_DEBUG_DETAILS=1
     ///   TT_DEBUG_TRIAGE=choose|date|project
     ///   TT_DEBUG_PANEL=listen|expanded|timer|list   (yüzen panelin halleri)
+    ///   TT_DEBUG_QUICKNOTE="Başlık #proje\\ngövde"
     ///   TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma // not"
     private func applyDebugLaunchOptions() {
         #if DEBUG
@@ -182,6 +191,10 @@ final class AppState {
         case "help": overlay = .help
         default: break
         }
+        if let text = env["TT_DEBUG_QUICKNOTE"] {
+            quickNote.show()
+            quickNote.text = text.replacingOccurrences(of: "\\n", with: "\n")
+        }
         if let text = env["TT_DEBUG_QUICKADD"] {
             quickAdd.show()
             quickAdd.text = text
@@ -198,6 +211,9 @@ final class AppState {
         today.reset()
         week.reset()
         kanban.reset()
+        projectsScreen.reset()
+        notes.reset()
+        quickNote.hide()
         active.reset()
         quickAdd.hide()
         panel.hide()
@@ -218,7 +234,7 @@ final class AppState {
     private func runRealtime() async {
         var delay = 1.0
         while !Task.isCancelled {
-            let stream = RealtimeClient(api: backend.api).events(topics: ["tasks", "projects", "focus_state"]) { [weak self] in
+            let stream = RealtimeClient(api: backend.api).events(topics: ["tasks", "projects", "notes", "focus_state"]) { [weak self] in
                 await self?.reloadAll()
             }
             do {
@@ -233,6 +249,8 @@ final class AppState {
                         if event.recordID == active.taskID { await active.reload() }
                     case "projects":
                         await projects.reload()
+                    case "notes":
+                        if route == .notes { notes.scheduleReload() }
                     case "focus_state":
                         await active.reload()
                     default:

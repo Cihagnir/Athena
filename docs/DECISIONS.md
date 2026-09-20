@@ -129,6 +129,19 @@ Planlama oturumunda (2026-09-20) alınan kararlar, gerekçeleri ve elenen altern
 
 Tasarımdan bilinen sapmalar (yuvarlak pencere köşesi, blok imleç, kısayol kaydedici kutusu): [../macos/README.md](../macos/README.md) → "Bilinçli kararlar ve tasarımdan sapmalar".
 
+## 13. Projeler, Notlar ve hızlı not *(2026-09-21)*
+
+Tasarım önce tuvalde netleştirildi, sonra uygulandı. Kullanıcı kararları:
+
+| Konu | Karar |
+|---|---|
+| Projeler | Şimdilik **yalnızca proje + tanım**. Projeye task tanımlama ekranı sonraya (hızlı eklemede `#ad` zaten çalışıyor). |
+| Notlar | **Sticky düzen** (kart ızgarası), monokrom: sabit not 2 px çerçeve + `▪ sabit`. Kart boyutu sabit → klavye gezinmesi öngörülebilir. |
+| Hızlı not | Global `⌃⌥N`; `↵` kaydeder, `⇧↵` yeni satır (hızlı eklemenin açıklama alanıyla tutarlı, tek düşünceyi en hızlı kaydeder). |
+| Ayrıştırma | Sunucuda (`/api/quicknote`): ilk satır başlık, `#proje` bağ. Android aynı endpoint'i kullanır. |
+| Kayıt | Tanım ve not editörlerinde kaydet tuşu yok; yazarken otomatik kayıt. |
+| Notu task'a bağlama | Ertelendi (`tasks.note` ilişkisi backend'de hazır). |
+
 ## Ertelenen kararlar
 
 - **Android teknolojisi** (Kotlin/Compose varsayılan aday) — Mac tasarımı oturduktan sonra.

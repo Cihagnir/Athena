@@ -20,6 +20,14 @@ import Testing
     }
 }
 
+@Suite struct NoteTests {
+    @Test func splitsEditorTextIntoTitleAndBody() {
+        #expect(Note.split("Başlık\nsatır 1\n\nsatır 2\n") == ("Başlık", "satır 1\n\nsatır 2"))
+        #expect(Note.split("\n  Tek satır  ") == ("Tek satır", ""))
+        #expect(Note.split("  \n") == ("", ""))
+    }
+}
+
 @Suite struct TimerTests {
     func state(_ startedAt: String, _ duration: Int) throws -> ActiveState {
         let json = "{\"state\":{\"current_task\":\"\",\"timer_started_at\":\"\(startedAt)\",\"timer_duration\":\(duration)},\"task\":null}"
@@ -180,6 +188,33 @@ struct LiveAPITests {
         #expect(try await api.openTasks().contains { $0.id == id } == false)
 
         try await api.deleteTask(id)
+        try await api.deleteProject(project.id)
+    }
+
+    @Test func projectsAndNotesLifecycle() async throws {
+        let api = try await client()
+        var project = try await api.createProject(name: "zz-swift-notlar", area: .work)
+        project = try await api.updateProject(project.id, ProjectPatch(details: "tanım\n2. satır", status: .onHold))
+        #expect(project.details == "tanım\n2. satır" && project.status == .onHold && project.area == .work)
+        project = try await api.updateProject(project.id, ProjectPatch(name: "zz-swift-notlar-2", status: .active))
+        #expect(project.name == "zz-swift-notlar-2" && project.details == "tanım\n2. satır")
+
+        let preview = try await api.quickNotePreview(text: "zz-swift fikir #zz-swift-not\ngövde")
+        #expect(preview.title == "zz-swift fikir" && preview.project?.id == project.id && preview.tokens.count == 1)
+
+        let quick = try await api.quickNote(text: "zz-swift fikir #zz-swift-not\ngövde")
+        #expect(quick.note.project == project.id && quick.note.body == "gövde" && !quick.note.pinned)
+
+        let manual = try await api.createNote(title: "zz-swift elle", body: "")
+        let pinned = try await api.updateNote(manual.id, NotePatch(body: "yeni gövde", pinned: true))
+        #expect(pinned.pinned && pinned.body == "yeni gövde" && pinned.title == "zz-swift elle")
+
+        let all = try await api.notes()
+        #expect(all.first?.pinned == true)
+        #expect(all.contains { $0.id == quick.note.id })
+
+        try await api.deleteNote(manual.id)
+        try await api.deleteNote(quick.note.id)
         try await api.deleteProject(project.id)
     }
 

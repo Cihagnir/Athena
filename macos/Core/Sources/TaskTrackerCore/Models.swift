@@ -55,11 +55,116 @@ public struct TaskItem: Identifiable, Sendable, Equatable, Decodable {
     public var hasDetails: Bool { !details.isEmpty }
 }
 
+public enum ProjectStatus: String, Codable, Sendable, CaseIterable {
+    case active, onHold = "on_hold", done
+}
+
 public struct Project: Identifiable, Sendable, Equatable, Decodable {
     public let id: String
     public var name: String
     public var area: Area
-    public var status: String
+    public var status: ProjectStatus
+    /// `projects.description` — projenin tanımı (serbest metin / markdown).
+    public var details: String
+    public var created: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, area, status, created
+        case details = "description"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        area = try c.decode(Area.self, forKey: .area)
+        status = try c.decode(ProjectStatus.self, forKey: .status)
+        details = try c.decodeIfPresent(String.self, forKey: .details) ?? ""
+        created = try c.decodeIfPresent(String.self, forKey: .created) ?? ""
+    }
+}
+
+public struct ProjectPatch: Sendable, Encodable {
+    public var name: String?
+    public var details: String?
+    public var area: Area?
+    public var status: ProjectStatus?
+
+    public init(name: String? = nil, details: String? = nil, area: Area? = nil, status: ProjectStatus? = nil) {
+        self.name = name
+        self.details = details
+        self.area = area
+        self.status = status
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case name, area, status
+        case details = "description"
+    }
+}
+
+public struct Note: Identifiable, Sendable, Equatable, Decodable {
+    public let id: String
+    public var title: String
+    public var body: String
+    /// Proje id'si; boş = projesiz.
+    public var project: String
+    public var pinned: Bool
+    public var created: String
+    public var updated: String
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        title = try c.decode(String.self, forKey: .title)
+        body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
+        project = try c.decodeIfPresent(String.self, forKey: .project) ?? ""
+        pinned = try c.decodeIfPresent(Bool.self, forKey: .pinned) ?? false
+        created = try c.decodeIfPresent(String.self, forKey: .created) ?? ""
+        updated = try c.decodeIfPresent(String.self, forKey: .updated) ?? ""
+    }
+
+    enum CodingKeys: String, CodingKey { case id, title, body, project, pinned, created, updated }
+
+    /// Editördeki tek metin: ilk satır başlık, kalanı gövde.
+    public var text: String { body.isEmpty ? title : title + "\n" + body }
+
+    /// Editör metnini başlık + gövdeye böler (ilk dolu satır başlıktır).
+    public static func split(_ text: String) -> (title: String, body: String) {
+        let lines = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard let first = lines.firstIndex(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) else { return ("", "") }
+        let body = lines[(first + 1)...].joined(separator: "\n")
+        return (lines[first].trimmingCharacters(in: .whitespaces), body.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+}
+
+public struct NotePatch: Sendable, Encodable {
+    public var title: String?
+    public var body: String?
+    public var project: String?
+    public var pinned: Bool?
+
+    public init(title: String? = nil, body: String? = nil, project: String? = nil, pinned: Bool? = nil) {
+        self.title = title
+        self.body = body
+        self.project = project
+        self.pinned = pinned
+    }
+}
+
+/// `/api/quicknote` ve `/api/quicknote/preview`
+public struct ParsedNote: Sendable, Decodable {
+    public let valid: Bool
+    public let title: String
+    public let body: String
+    public let project: ParsedInput.ProjectRef?
+    public let tokens: [ParsedInput.Token]
+    public let warnings: [String]
+}
+
+public struct QuickNoteResult: Sendable, Decodable {
+    public let note: Note
+    public let parsed: ParsedNote
 }
 
 /// `GET /api/views/focus`

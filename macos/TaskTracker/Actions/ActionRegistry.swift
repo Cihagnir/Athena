@@ -18,6 +18,10 @@ enum ActionContext: String, CaseIterable {
     case week
     /// Kanban görünümü.
     case kanban
+    /// Projeler görünümü.
+    case projects
+    /// Notlar görünümü.
+    case notes
     /// Yüzen mini panel klavyeyi dinlerken.
     case miniPanel
     /// Yüzen liste paneli; ayrıca `.todayList` aksiyonlarının hepsi burada da geçerlidir.
@@ -34,6 +38,8 @@ enum ActionContext: String, CaseIterable {
         case .triage: "TRİYAJ"
         case .week: "HAFTA"
         case .kanban: "KANBAN"
+        case .projects: "PROJELER"
+        case .notes: "NOTLAR"
         case .miniPanel: "MİNİ PANEL"
         case .listPanel: "LİSTE PANELİ (+ odak listesi tuşları)"
         case .quickAdd: "HIZLI EKLEME"
