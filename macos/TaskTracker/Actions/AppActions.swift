@@ -35,6 +35,10 @@ enum AppActions {
                 guard let app, app.phase == .loggedIn else { return }
                 app.panel.toggleVisibility()
             },
+            AppAction(id: "panel.resetPosition", title: "Yüzen paneli varsayılan konuma al (sağ üst)", context: .global) { [weak app] in
+                guard let app, app.phase == .loggedIn else { return }
+                app.panel.resetPosition()
+            },
             AppAction(id: "mainWindow.show", title: "Ana pencereyi göster", context: .global,
                       defaultGlobal: .init(.t, modifiers: [.control, .option])) { [weak app] in
                 app?.showMainWindow()

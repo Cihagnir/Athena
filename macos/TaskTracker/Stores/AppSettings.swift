@@ -21,10 +21,13 @@ final class AppSettings {
     var startsFullScreen: Bool { didSet { defaults.set(startsFullScreen, forKey: "startsFullScreen") } }
     /// Yüzen panel görünür mü (H / "Paneli göster-gizle" ile değişir).
     var showsPanel: Bool { didSet { defaults.set(showsPanel, forKey: "showsPanel") } }
-    /// Yüzen panel penceresinin son konumu (sol alt köşe, ekran koordinatı).
-    var panelOrigin: NSPoint? {
-        didSet { defaults.set(panelOrigin.map { [$0.x, $0.y] }, forKey: "panelOrigin") }
+    /// Yüzen panel **içeriğinin** sabit köşesi (ekran koordinatı): sol kenar + üste yaslıysa
+    /// üst kenar, alta yaslıysa alt kenar. Pencere değil içerik saklanır — pencere içerikten
+    /// uzun ve saydamdır; pencere konumundan yaslama çıkarmak paneli kaydırıyordu.
+    var panelAnchor: NSPoint? {
+        didSet { defaults.set(panelAnchor.map { [$0.x, $0.y] }, forKey: "panelAnchor") }
     }
+    var panelAnchorsTop: Bool { didSet { defaults.set(panelAnchorsTop, forKey: "panelAnchorsTop") } }
     var showsMenuBarItem: Bool { didSet { defaults.set(showsMenuBarItem, forKey: "showsMenuBarItem") } }
     var appearance: Appearance {
         didSet {
@@ -41,11 +44,13 @@ final class AppSettings {
         startsFullScreen = defaults.bool(forKey: "startsFullScreen")
         showsMenuBarItem = defaults.object(forKey: "showsMenuBarItem") as? Bool ?? true
         showsPanel = defaults.object(forKey: "showsPanel") as? Bool ?? true
-        if let xy = defaults.array(forKey: "panelOrigin") as? [Double], xy.count == 2 {
-            panelOrigin = NSPoint(x: xy[0], y: xy[1])
+        if let xy = defaults.array(forKey: "panelAnchor") as? [Double], xy.count == 2 {
+            panelAnchor = NSPoint(x: xy[0], y: xy[1])
         } else {
-            panelOrigin = nil
+            panelAnchor = nil
         }
+        panelAnchorsTop = defaults.object(forKey: "panelAnchorsTop") as? Bool ?? true
+        defaults.removeObject(forKey: "panelOrigin")  // eski, hatalı konum kaydı
         appearance = Appearance(rawValue: defaults.string(forKey: "appearance") ?? "") ?? .system
     }
 

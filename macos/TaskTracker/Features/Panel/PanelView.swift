@@ -25,6 +25,12 @@ struct PanelView: View {
         .frame(maxHeight: .infinity, alignment: panel.anchorsTop ? .top : .bottom)
         .font(Theme.font())
         .foregroundStyle(Theme.ink)
+        // Panel herhangi bir yerinden tutulup taşınır; 4 pt eşiği tıklamaları bozmaz.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 4, coordinateSpace: .global)
+                .onChanged { _ in panel.dragChanged() }
+                .onEnded { _ in panel.dragEnded() }
+        )
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
