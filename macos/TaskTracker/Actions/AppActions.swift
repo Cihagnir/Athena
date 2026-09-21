@@ -253,8 +253,17 @@ enum AppActions {
             action("filter", "Proje filtresi", [KeyBinding(key: .tab, display: "⇥")], browsing { store.cycleFilter() }),
             action("search", "Ara", [KeyBinding(key: "/", display: "/")], browsing { store.beginSearch() }),
             action("delete", "Sil (↵ ile onaylanır)", [KeyBinding(key: .delete, display: "⌫")], browsing { store.beginDelete() }),
-            action("escape", "Vazgeç / aramayı temizle", [KeyBinding(key: .escape, display: "esc")]) {
-                if store.mode == .confirmDelete { store.cancel() } else if !store.query.isEmpty { store.endSearch(clear: true) }
+            // DİKKAT: SwiftUI `esc`'i, içindeki metin alanı (NSTextView) odaktayken bile ÖNCE bu
+            // dinleyiciye verir ve "işlendi" dönerse metin alanının kendi `onCancel`'ı hiç çalışmaz.
+            // Bu yüzden içinde metin alanı barındıran her görünümün esc aksiyonu yazma modlarını
+            // da kapatmak zorundadır (Projeler ve Triyaj'daki `store.cancel()` gibi).
+            action("escape", "Editörü / aramayı kapat · vazgeç", [KeyBinding(key: .escape, display: "esc")]) {
+                switch store.mode {
+                case .editing: store.closeEditor()
+                case .searching: store.endSearch(clear: true)
+                case .confirmDelete: store.cancel()
+                case .browse: if !store.query.isEmpty { store.endSearch(clear: true) }
+                }
             },
         ]
     }

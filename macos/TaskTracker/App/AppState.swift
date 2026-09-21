@@ -177,6 +177,7 @@ final class AppState {
 
     /// Yalnızca DEBUG: ekranları klavyesiz doğrulamak için (macos/README.md → Doğrulama).
     ///   TT_DEBUG_ROUTE=settings   TT_DEBUG_OVERLAY=palette|help   TT_DEBUG_DETAILS=1
+    ///   TT_DEBUG_KEYCODES=36,53   (sentetik tuşlar; aşağıda)
     ///   TT_DEBUG_EDIT=1   (Odak'ta seçili task'ın düzenleme katmanı)
     ///   TT_DEBUG_TRIAGE=choose|date|project
     ///   TT_DEBUG_PANEL=listen|expanded|timer|list   (yüzen panelin halleri)
@@ -187,6 +188,30 @@ final class AppState {
         let env = ProcessInfo.processInfo.environment
         if let route = env["TT_DEBUG_ROUTE"].flatMap(Route.init(rawValue:)) { self.route = route }
         if env["TT_DEBUG_DETAILS"] != nil { today.showsDetails = true }
+        // Uygulamanın içinden sentetik tuş: sistem izni gerektirmez ve tuşlar gerçek yoldan
+        // (pencere → SwiftUI → metin alanı) geçer; klavye akışlarını ölçmeyi sağlar.
+        //   TT_DEBUG_ROUTE=notes TT_DEBUG_KEYCODES=36,53   (↵ aç, esc kapat) → her tuştan sonra durum yazdırılır
+        if let codes = env["TT_DEBUG_KEYCODES"] {
+            let characters: [UInt16: String] = [53: "\u{1b}", 36: "\r", 48: "\t", 49: " ", 14: "e", 45: "n", 2: "d", 15: "r", 35: "p", 44: "/"]
+            Task {
+                try? await Task.sleep(for: .seconds(4))
+                NSApp.activate()
+                mainWindow?.makeKeyAndOrderFront(nil)
+                try? await Task.sleep(for: .seconds(1))
+                print("TTKEY başlangıç anahtarPencere=\(mainWindow?.isKeyWindow ?? false)"); fflush(stdout)
+                for code in codes.split(separator: ",").compactMap({ UInt16($0) }) {
+                    let text = characters[code] ?? ""
+                    if let window = mainWindow,
+                       let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                    windowNumber: window.windowNumber, context: nil, characters: text,
+                                                    charactersIgnoringModifiers: text, isARepeat: false, keyCode: code) {
+                        window.sendEvent(event)
+                    }
+                    try? await Task.sleep(for: .milliseconds(1200))
+                    print("TTKEY \(code) → route=\(route) overlay=\(overlay.map { "\($0)" } ?? "yok") detay=\(today.showsDetails) notlar=\(notes.mode) projeler=\(projectsScreen.mode) triyaj=\(triage.mode)"); fflush(stdout)
+                }
+            }
+        }
         if env["TT_DEBUG_EDIT"] != nil {
             Task {
                 try? await Task.sleep(for: .seconds(2))

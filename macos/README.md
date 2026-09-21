@@ -177,6 +177,8 @@ Ayarlar'daki kısayol tablosu da aynı listeden çizilir ve **her aksiyonun bir 
 
 **Tuş dinleyici sırası:** SwiftUI'de tuşlar odaktaki görünüme ve onun *üstündekilere* gider. Bu yüzden `.keyboardFocus(…)` önce, `.onKeyPress { … }` sonra yazılır; tersi sessizce çalışmaz.
 
+**`esc` tuzağı:** `esc`, içteki metin alanı (`InkTextView` / `NSTextView`) odaktayken bile **önce** onu saran SwiftUI görünümlerinin `onKeyPress` dinleyicilerine gider (harfler gitmez, yalnızca `esc`). Dinleyici `.handled` dönerse metin alanının `onCancel`'ı hiç çalışmaz. `ActionRegistry.handle`, eşleşen bir aksiyon bulunca aksiyon bir şey yapmasa da `.handled` döner → **içinde metin alanı barındıran her görünümün `esc` aksiyonu yazma modlarını da kapatmalıdır** (Projeler ve Triyaj: `store.cancel()`; Notlar: `closeEditor()` / `endSearch`). Notlar'da bu eksikti: editör `esc` ile kapanmıyordu.
+
 ### Menü çubuğu ve otomatik başlama
 
 `TaskTrackerApp` içindeki `MenuBarExtra` sahnesi; etiketi `AppState.menuBarLabel`, görünürlüğü `AppSettings.showsMenuBarItem`. Oturum kurulumu (`bootstrap`) görünümden bağımsız olarak `AppState.init` içinde başlar — pencere hiç açılmasa da (login item) sayılar ve realtime çalışır. `LoginItem.launchedAtLogin` doğruysa `AppDelegate` açılışta pencereyi kapatır.
@@ -290,7 +292,7 @@ TT_URL=http://127.0.0.1:8090 TT_EMAIL="$TT_USER_EMAIL" TT_PASSWORD="$TT_USER_PAS
 
 Canlı testler gerçek sunucuya karşı şunları doğrular: girişsiz istek `401`, ulaşılamayan sunucu hatası, quickadd → odak listesi → aktif task → zamanlayıcı → tamamla → triyaj → sil döngüsü, SSE ile olay teslimi. Oluşturdukları kayıtları (`zz-swift…`) silerler.
 
-Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etmek için **yalnızca DEBUG derlemesinde** iki ortam değişkeni vardır:
+Arayüz için otomatik test yok. Ekranları klavyesiz açıp gözle kontrol etmek ve **klavye akışlarını ölçmek** için **yalnızca DEBUG derlemesinde** ortam değişkenleri vardır:
 
 ```sh
 TT_DEBUG_ROUTE=settings \
@@ -300,6 +302,17 @@ TT_DEBUG_QUICKADD="Rapor yaz salı son:cuma !1 // kısa not" \
 ```
 
 (`TT_DEBUG_TRIAGE`: `choose` | `date` | `project`. `TT_DEBUG_OVERLAY`: `palette` | `help`. `TT_DEBUG_PANEL`: `listen` | `expanded` | `timer` | `note` | `list` — yüzen panelin halini klavye odağı olmadan zorlar. Not: uygulama terminalden arka planda başlatılıp pasifleşince gerçek klavye odağı düşer; panel halleri bu yüzden zorlanarak doğrulanır.)
+
+**Sentetik tuşlar — klavye akışını gerçekten ölçmek.** `TT_DEBUG_KEYCODES` uygulamanın *içinden* tuş olayı üretir: sistem izni gerekmez ve tuş gerçek yoldan geçer (pencere → SwiftUI → metin alanı). Her tuştan sonra durum satırı yazdırılır:
+
+```sh
+TT_DEBUG_ROUTE=notes TT_DEBUG_KEYCODES=36,53 …/TaskTracker      # ↵ notu aç, esc kapat
+#   TTKEY 36 → … notlar=editing …
+#   TTKEY 53 → … notlar=browse …
+TT_DEBUG_ROUTE=today TT_DEBUG_KEYCODES=14,14,53,53 …/TaskTracker # E detay, E düzenle, esc, esc
+```
+
+Tuş kodları: `53` esc · `36` ↵ · `48` ⇥ · `49` ␣ · `14` E · `45` N · `2` D · `15` R · `35` P · `44` /. İlk satırda `anahtarPencere=false` yazıyorsa uygulama öne geçememiştir (macOS arka plandan başlatılan uygulamayı her zaman öne almaz) — ölçüm geçersizdir, yeniden çalıştır.
 
 Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults delete local.tasktracker.mac`
 Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/Library/Saved\ Application\ State/local.tasktracker.mac.savedState`
