@@ -1,3 +1,4 @@
+import AppKit
 import KeyboardShortcuts
 import Observation
 import SwiftUI
@@ -59,9 +60,24 @@ struct KeyBinding {
     /// Shift yalnızca ok tuşlarında ayırt edilir (`→` ≠ `⇧→`). Karakter tuşlarında
     /// yok sayılır: `?` zaten Shift'le üretilir, `D` büyük/küçük aynı aksiyondur.
     func matches(_ press: KeyPress) -> Bool {
-        let pressed = Character(press.key.character.lowercased())
+        matches(character: press.key.character, modifiers: press.modifiers)
+    }
+
+    /// AppKit olayından: SwiftUI'nin `KeyEquivalent` karakterleri NSEvent'inkilerle aynıdır
+    /// (↵ "\r", ⇥ "\t", esc "\u{1B}", ⌫ "\u{7F}", oklar U+F700…).
+    func matches(_ event: NSEvent) -> Bool {
+        guard let text = event.charactersIgnoringModifiers, let character = text.first else { return false }
+        var modifiers: EventModifiers = []
+        if event.modifierFlags.contains(.command) { modifiers.insert(.command) }
+        if event.modifierFlags.contains(.option) { modifiers.insert(.option) }
+        if event.modifierFlags.contains(.control) { modifiers.insert(.control) }
+        if event.modifierFlags.contains(.shift) { modifiers.insert(.shift) }
+        return matches(character: character, modifiers: modifiers)
+    }
+
+    private func matches(character: Character, modifiers pressed: EventModifiers) -> Bool {
         let mask = Self.arrows.contains(key) ? Self.compared.union(.shift) : Self.compared
-        return pressed == key.character && press.modifiers.intersection(mask) == modifiers.intersection(mask)
+        return Character(character.lowercased()) == key.character && pressed.intersection(mask) == modifiers.intersection(mask)
     }
 }
 
@@ -102,6 +118,9 @@ struct AppAction: Identifiable {
 @Observable
 final class ActionRegistry {
     private(set) var actions: [AppAction] = []
+    /// `handle` her çağrıldığında `true` olur — SwiftUI klavye odağının canlı olduğunun kanıtı
+    /// (AppState'teki güvenlik ağı bunu okur; odak düşmüşse tuşu kendisi yönlendirir).
+    @ObservationIgnored var sawKeyPress = false
 
     func register(_ newActions: [AppAction]) {
         actions.append(contentsOf: newActions)
@@ -133,10 +152,23 @@ final class ActionRegistry {
 
     /// SwiftUI `onKeyPress` için: tuş bu bağlamda bir aksiyona bağlıysa çalıştırır.
     func handle(_ press: KeyPress, in context: ActionContext) -> KeyPress.Result {
+        sawKeyPress = true
         guard let action = actions(in: context).first(where: { $0.keys.contains { $0.matches(press) } }) else {
             return .ignored
         }
         action.perform()
         return .handled
+    }
+
+    /// AppKit olayı için; ilk eşleşen bağlamın aksiyonunu çalıştırır.
+    @discardableResult
+    func handle(_ event: NSEvent, in contexts: [ActionContext]) -> Bool {
+        for context in contexts {
+            if let action = actions(in: context).first(where: { $0.keys.contains { $0.matches(event) } }) {
+                action.perform()
+                return true
+            }
+        }
+        return false
     }
 }

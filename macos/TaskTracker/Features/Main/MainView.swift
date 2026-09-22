@@ -152,6 +152,7 @@ private struct Sidebar: View {
 /// açıkken odağı bırakır, kapanınca geri alır.
 private struct KeyboardFocus: ViewModifier {
     let blocked: Bool
+    @Environment(AppState.self) private var app
     @FocusState private var focused: Bool
 
     func body(content: Content) -> some View {
@@ -161,6 +162,8 @@ private struct KeyboardFocus: ViewModifier {
             .focused($focused)
             .onAppear { focused = !blocked }
             .onChange(of: blocked) { _, blocked in focused = !blocked }
+            // Güvenlik ağı odağın düştüğünü fark edince buradan geri alınır.
+            .onChange(of: app.focusTick) { focused = !blocked }
     }
 }
 

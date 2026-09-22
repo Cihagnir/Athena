@@ -72,6 +72,9 @@ final class AppState {
     var openMainWindow: () -> Void = {}
     /// `WindowConfigurator` doldurur (tam ekran gibi pencere düzeyi işler için).
     @ObservationIgnored weak var mainWindow: NSWindow?
+    @ObservationIgnored private var keyMonitor: Any?
+    /// Artınca `keyboardFocus(unless:)` görünümleri klavye odağını yeniden alır.
+    var focusTick = 0
 
     private var realtimeTask: Task<Void, Never>?
 
@@ -96,6 +99,7 @@ final class AppState {
             if saved { Task { await self.reloadVisibleTasks() } }
         }
         registry.register(AppActions.all(for: self))
+        installKeyFallback()
         // Görünümden bağımsız: pencere açılışta kapalı olsa da (login item) oturum kurulur.
         Task { await bootstrap() }
     }
@@ -191,6 +195,7 @@ final class AppState {
         // Uygulamanın içinden sentetik tuş: sistem izni gerektirmez ve tuşlar gerçek yoldan
         // (pencere → SwiftUI → metin alanı) geçer; klavye akışlarını ölçmeyi sağlar.
         //   TT_DEBUG_ROUTE=notes TT_DEBUG_KEYCODES=36,53   (↵ aç, esc kapat) → her tuştan sonra durum yazdırılır
+        //   TT_DEBUG_KEYCODES=r:notes,45   (önce Notlar'a geç, sonra N) — "r:<görünüm>" kenar çubuğu tıklamasını taklit eder
         if let codes = env["TT_DEBUG_KEYCODES"] {
             let characters: [UInt16: String] = [53: "\u{1b}", 36: "\r", 48: "\t", 49: " ", 14: "e", 45: "n", 2: "d", 15: "r", 35: "p", 44: "/"]
             Task {
@@ -199,13 +204,46 @@ final class AppState {
                 mainWindow?.makeKeyAndOrderFront(nil)
                 try? await Task.sleep(for: .seconds(1))
                 print("TTKEY başlangıç anahtarPencere=\(mainWindow?.isKeyWindow ?? false)"); fflush(stdout)
-                for code in codes.split(separator: ",").compactMap({ UInt16($0) }) {
+                for token in codes.split(separator: ",") {
+                    // "r:notes" → kenar çubuğuna tıklamış gibi görünüm değiştirir
+                    if token.hasPrefix("r:"), let target = Route(rawValue: String(token.dropFirst(2))) {
+                        route = target
+                        try? await Task.sleep(for: .milliseconds(1200))
+                        print("TTKEY \(token) → route=\(route) birinciYanıtlayıcı=\(mainWindow?.firstResponder.map { String(describing: type(of: $0)) } ?? "yok")"); fflush(stdout)
+                        continue
+                    }
+                    // "c:100:198" → pencerenin sol üstünden (x, y) noktasına fare tıklaması
+                    if token.hasPrefix("c:"), let window = mainWindow {
+                        let parts = token.dropFirst(2).split(separator: ":").compactMap { Double($0) }
+                        if parts.count == 2 {
+                            let point = NSPoint(x: parts[0], y: (window.contentView?.bounds.height ?? 0) - parts[1])
+                            for (type, clicks) in [(NSEvent.EventType.leftMouseDown, 1), (.leftMouseUp, 1)] {
+                                if let event = NSEvent.mouseEvent(with: type, location: point, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                                  windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: clicks, pressure: 1) {
+                                    // Düğmeler fare bırakmayı olay kuyruğundan bekler → kuyruğa konur.
+                                    NSApp.postEvent(event, atStart: false)
+                                }
+                            }
+                            try? await Task.sleep(for: .milliseconds(1200))
+                            print("TTKEY \(token) → route=\(route) notlar=\(notes.mode) seçili=\(notes.selectedID ?? "-")"); fflush(stdout)
+                        }
+                        continue
+                    }
+                    // "f:" → SwiftUI klavye odağını düşürür (tıklamanın yaptığı şeyi taklit eder)
+                    if token == "f:" {
+                        mainWindow?.makeFirstResponder(nil)
+                        try? await Task.sleep(for: .milliseconds(600))
+                        print("TTKEY f: → birinciYanıtlayıcı=\(mainWindow?.firstResponder.map { String(describing: type(of: $0)) } ?? "yok")"); fflush(stdout)
+                        continue
+                    }
+                    guard let code = UInt16(token) else { continue }
                     let text = characters[code] ?? ""
                     if let window = mainWindow,
                        let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
                                                     windowNumber: window.windowNumber, context: nil, characters: text,
                                                     charactersIgnoringModifiers: text, isARepeat: false, keyCode: code) {
-                        window.sendEvent(event)
+                        // Gerçek klavyeyle aynı yol: NSApp → izleyiciler → pencere.
+                        NSApp.sendEvent(event)
                     }
                     try? await Task.sleep(for: .milliseconds(1200))
                     print("TTKEY \(code) → route=\(route) overlay=\(overlay.map { "\($0)" } ?? "yok") detay=\(today.showsDetails) notlar=\(notes.mode) projeler=\(projectsScreen.mode) triyaj=\(triage.mode)"); fflush(stdout)
@@ -308,6 +346,27 @@ final class AppState {
             }
             try? await Task.sleep(for: .seconds(delay))
             delay = min(delay * 2, 30)
+        }
+    }
+
+    // MARK: Klavye güvenlik ağı
+
+    /// SwiftUI tuşları yalnızca klavye odağı ekranın içindeyken dinler; fare tıklaması (ör.
+    /// kenar çubuğundan görünüm değiştirmek) odağı düşürebiliyor ve o zaman `N`, `D`… hiçbir
+    /// yere gitmiyordu. Bu izleyici ana pencereye gelen her tuşa bakar: SwiftUI tuşu görmediyse
+    /// (`sawKeyPress` kalkmadıysa), bir metin alanı yazmada değilse ve katman açık değilse tuşu
+    /// doğrudan o görünümün bağlamına yönlendirir ve odağı geri alır. Çift işleme olmaz.
+    private func installKeyFallback() {
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, let window = mainWindow, event.window === window else { return event }
+            registry.sawKeyPress = false
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !registry.sawKeyPress, phase == .loggedIn, overlay == nil,
+                      !(window.firstResponder is NSTextView) else { return }
+                registry.handle(event, in: [route.context, .anyView].compactMap { $0 })
+                focusTick += 1
+            }
+            return event
         }
     }
 

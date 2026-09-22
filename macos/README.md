@@ -177,6 +177,8 @@ Ayarlar'daki kısayol tablosu da aynı listeden çizilir ve **her aksiyonun bir 
 
 **Tuş dinleyici sırası:** SwiftUI'de tuşlar odaktaki görünüme ve onun *üstündekilere* gider. Bu yüzden `.keyboardFocus(…)` önce, `.onKeyPress { … }` sonra yazılır; tersi sessizce çalışmaz.
 
+**Klavye güvenlik ağı (`AppState.installKeyFallback`):** SwiftUI tuşları yalnızca klavye odağı ekranın içindeyken dinler; fare tıklaması (ör. kenar çubuğundan görünüm değiştirmek) odağı düşürebiliyor ve o zaman `N`, `D`… hiçbir yere gitmiyordu. Ana pencereye gelen her tuşu bir `NSEvent` yerel izleyicisi görür; olay dağıtıldıktan sonra SwiftUI tuşu görmediyse (`ActionRegistry.sawKeyPress` kalkmadıysa), bir metin alanı yazmada değilse ve katman açık değilse tuş doğrudan görünümün bağlamına (`Route.context` + `.anyView`) yönlendirilir ve `focusTick` ile odak geri alınır. Odak sağlamken izleyici hiçbir şey yapmaz → çift işleme yok.
+
 **`esc` tuzağı:** `esc`, içteki metin alanı (`InkTextView` / `NSTextView`) odaktayken bile **önce** onu saran SwiftUI görünümlerinin `onKeyPress` dinleyicilerine gider (harfler gitmez, yalnızca `esc`). Dinleyici `.handled` dönerse metin alanının `onCancel`'ı hiç çalışmaz. `ActionRegistry.handle`, eşleşen bir aksiyon bulunca aksiyon bir şey yapmasa da `.handled` döner → **içinde metin alanı barındıran her görünümün `esc` aksiyonu yazma modlarını da kapatmalıdır** (Projeler ve Triyaj: `store.cancel()`; Notlar: `closeEditor()` / `endSearch`). Notlar'da bu eksikti: editör `esc` ile kapanmıyordu.
 
 ### Menü çubuğu ve otomatik başlama
@@ -312,7 +314,7 @@ TT_DEBUG_ROUTE=notes TT_DEBUG_KEYCODES=36,53 …/TaskTracker      # ↵ notu aç
 TT_DEBUG_ROUTE=today TT_DEBUG_KEYCODES=14,14,53,53 …/TaskTracker # E detay, E düzenle, esc, esc
 ```
 
-Tuş kodları: `53` esc · `36` ↵ · `48` ⇥ · `49` ␣ · `14` E · `45` N · `2` D · `15` R · `35` P · `44` /. İlk satırda `anahtarPencere=false` yazıyorsa uygulama öne geçememiştir (macOS arka plandan başlatılan uygulamayı her zaman öne almaz) — ölçüm geçersizdir, yeniden çalıştır.
+Belirteçler: `r:<görünüm>` görünüm değiştirir, `f:` klavye odağını düşürür (tıklamanın yaptığı şeyi taklit eder), `c:<x>:<y>` pencere içine tıklama dener (düğmeleri tetiklemiyor, kartları seçiyor). Tuşlar `NSApp.sendEvent` ile gerçek yoldan gider (izleyiciler dahil). Tuş kodları: `53` esc · `36` ↵ · `48` ⇥ · `49` ␣ · `14` E · `45` N · `2` D · `15` R · `35` P · `44` /. İlk satırda `anahtarPencere=false` yazıyorsa uygulama öne geçememiştir (macOS arka plandan başlatılan uygulamayı her zaman öne almaz) — ölçüm geçersizdir, yeniden çalıştır.
 
 Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults delete local.tasktracker.mac`
 Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/Library/Saved\ Application\ State/local.tasktracker.mac.savedState`
