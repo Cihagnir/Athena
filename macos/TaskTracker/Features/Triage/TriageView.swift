@@ -25,7 +25,9 @@ struct TriageView: View {
         }
         // Metin yazılırken klavye alanın kendisindedir; aksi halde bu görünümde.
         .keyboardFocus(unless: app.overlay != nil || store.isTyping)
-        .onKeyPress(phases: .down) { app.registry.handle($0, in: .triage) }
+        // Yazma modunda tuşlar metin alanına bırakılır: aksiyon iş yapmasa da `handle` "işlendi"
+        // dönerdi ve kısayola bağlı harfler (N, E, P…) metne yazılmazdı. esc'i alan kendisi (`onCancel`) kapatır.
+        .onKeyPress(phases: .down) { store.isTyping ? .ignored : app.registry.handle($0, in: .triage) }
         .task { await store.start() }
     }
 

@@ -314,7 +314,7 @@ TT_DEBUG_ROUTE=notes TT_DEBUG_KEYCODES=36,53 …/TaskTracker      # ↵ notu aç
 TT_DEBUG_ROUTE=today TT_DEBUG_KEYCODES=14,14,53,53 …/TaskTracker # E detay, E düzenle, esc, esc
 ```
 
-Belirteçler: `r:<görünüm>` görünüm değiştirir, `f:` klavye odağını düşürür (tıklamanın yaptığı şeyi taklit eder), `c:<x>:<y>` pencere içine tıklama dener (düğmeleri tetiklemiyor, kartları seçiyor). Tuşlar `NSApp.sendEvent` ile gerçek yoldan gider (izleyiciler dahil). Tuş kodları: `53` esc · `36` ↵ · `48` ⇥ · `49` ␣ · `14` E · `45` N · `2` D · `15` R · `35` P · `44` /. İlk satırda `anahtarPencere=false` yazıyorsa uygulama öne geçememiştir (macOS arka plandan başlatılan uygulamayı her zaman öne almaz) — ölçüm geçersizdir, yeniden çalıştır.
+Belirteçler: `r:<görünüm>` görünüm değiştirir, `f:` klavye odağını düşürür (tıklamanın yaptığı şeyi taklit eder), `c:<x>:<y>` pencere içine tıklama dener (düğmeleri tetiklemiyor, kartları seçiyor). Tuşlar `NSApp.sendEvent` ile gerçek yoldan gider (izleyiciler dahil). Tuş kodları: `53` esc · `36` ↵ · `48` ⇥ · `49` ␣ · `14` E · `45` N · `2` D · `15` R · `35` P · `44` / · `19` 2. İlk satırda `anahtarPencere=false` yazıyorsa uygulama öne geçememiştir (macOS arka plandan başlatılan uygulamayı her zaman öne almaz) — ölçüm geçersizdir, yeniden çalıştır.
 
 Ayarları sıfırlamak (çıkış + varsayılan sunucu + kısayollar): `defaults delete local.tasktracker.mac`
 Pencere durumunu sıfırlamak (ör. tam ekranda takılı kaldıysa): `rm -rf ~/Library/Saved\ Application\ State/local.tasktracker.mac.savedState`

@@ -16,7 +16,9 @@ struct NotesView: View {
             InkHints(hints(store.mode)).padding(.horizontal, 32).padding(.vertical, 8)
         }
         .keyboardFocus(unless: app.overlay != nil || store.isTyping)
-        .onKeyPress(phases: .down) { app.registry.handle($0, in: .notes) }
+        // Yazma modunda tuşlar metin alanına bırakılır: aksiyon iş yapmasa da `handle` "işlendi"
+        // dönerdi ve kısayola bağlı harfler (N, E, P…) metne yazılmazdı. esc'i alan kendisi (`onCancel`) kapatır.
+        .onKeyPress(phases: .down) { store.isTyping ? .ignored : app.registry.handle($0, in: .notes) }
         .task { await store.reload() }
     }
 
