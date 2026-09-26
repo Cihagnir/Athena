@@ -197,7 +197,7 @@ final class AppState {
         //   TT_DEBUG_ROUTE=notes TT_DEBUG_KEYCODES=36,53   (↵ aç, esc kapat) → her tuştan sonra durum yazdırılır
         //   TT_DEBUG_KEYCODES=r:notes,45   (önce Notlar'a geç, sonra N) — "r:<görünüm>" kenar çubuğu tıklamasını taklit eder
         if let codes = env["TT_DEBUG_KEYCODES"] {
-            let characters: [UInt16: String] = [53: "\u{1b}", 36: "\r", 48: "\t", 49: " ", 14: "e", 45: "n", 2: "d", 15: "r", 35: "p", 44: "/", 19: "2"]
+            let characters: [UInt16: String] = [53: "\u{1b}", 36: "\r", 48: "\t", 49: " ", 14: "e", 45: "n", 2: "d", 15: "r", 35: "p", 44: "/", 19: "2", 51: "\u{7F}"]
             Task {
                 try? await Task.sleep(for: .seconds(4))
                 NSApp.activate()
@@ -246,7 +246,7 @@ final class AppState {
                         NSApp.sendEvent(event)
                     }
                     try? await Task.sleep(for: .milliseconds(1200))
-                    print("TTKEY \(code) → route=\(route) overlay=\(overlay.map { "\($0)" } ?? "yok") detay=\(today.showsDetails) notlar=\(notes.mode) notMetin=\"\(notes.editorText)\" projeler=\(projectsScreen.mode) projeAd=\"\(projectsScreen.nameInput)\" triyaj=\(triage.mode) triyajTarih=\"\(triage.dateInput)\""); fflush(stdout)
+                    print("TTKEY \(code) → route=\(route) overlay=\(overlay.map { "\($0)" } ?? "yok") detay=\(today.showsDetails) notlar=\(notes.mode) notMetin=\"\(notes.editorText)\" projeler=\(projectsScreen.mode) projeAd=\"\(projectsScreen.nameInput)\" triyaj=\(triage.mode) triyajTarih=\"\(triage.dateInput)\" notSayısı=\(notes.notes.count) seçili=\(notes.selectedID ?? "-") hata=\(backend.lastError ?? "-")"); fflush(stdout)
                 }
             }
         }

@@ -64,7 +64,7 @@ struct KeyBinding {
     }
 
     /// AppKit olayından: SwiftUI'nin `KeyEquivalent` karakterleri NSEvent'inkilerle aynıdır
-    /// (↵ "\r", ⇥ "\t", esc "\u{1B}", ⌫ "\u{7F}", oklar U+F700…).
+    /// (↵ "\r", ⇥ "\t", esc "\u{1B}", oklar U+F700…); ⌫ `normalized` ile çevrilir.
     func matches(_ event: NSEvent) -> Bool {
         guard let text = event.charactersIgnoringModifiers, let character = text.first else { return false }
         var modifiers: EventModifiers = []
@@ -77,7 +77,15 @@ struct KeyBinding {
 
     private func matches(character: Character, modifiers pressed: EventModifiers) -> Bool {
         let mask = Self.arrows.contains(key) ? Self.compared.union(.shift) : Self.compared
-        return Character(character.lowercased()) == key.character && pressed.intersection(mask) == modifiers.intersection(mask)
+        return Self.normalized(character) == key.character && pressed.intersection(mask) == modifiers.intersection(mask)
+    }
+
+    /// Basılan tuşun karakterini `KeyEquivalent` diline çevirir. ⌫ tuşu hem SwiftUI `KeyPress`
+    /// hem `NSEvent` tarafında DEL (U+007F) gelir, ama `KeyEquivalent.delete` BS (U+0008)
+    /// karakteridir — çevrilmezse `⌫` bağlamaları hiç eşleşmez (Notlar/Projeler'de silme çalışmazdı).
+    private static func normalized(_ character: Character) -> Character {
+        if character == "\u{7F}" { return KeyEquivalent.delete.character }
+        return Character(character.lowercased())
     }
 }
 
