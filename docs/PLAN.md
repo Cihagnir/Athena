@@ -17,16 +17,16 @@ Todoist (ve genel olarak hazır araçlar) zamanla yetmiyor; hedef, **tamamen mod
 | Konu | Karar |
 |---|---|
 | Yaklaşım | Hazır araç değil, custom. (Vikunja değerlendirildi: task tarafı güçlü ama not kavramı, triyaj ve dashboard modu yok; şema onların.) |
-| Backend | **PocketBase**, `<sunucu>` üzerinde Docker |
+| Backend | **PocketBase**, sunucuda Docker |
 | İstemciler | **İki ayrı native uygulama** — platform başına yoğun özelleştirme yapılacağı için. **macOS: Swift + SwiftUI (kesinleşti)**; Android teknolojisi Mac tasarımı netleşince ayrıca kararlaştırılacak. **Önce Mac.** |
 | Not ↔ Task | İki ayrı alan, gevşek bağ |
 | Offline | Yok — online yeterli |
-| Erişim | ~~Yalnızca Tailscale~~ → Cloudflare Tunnel (`tasks.example.com`) + API anahtarı — [DEPLOY.md](DEPLOY.md) |
+| Erişim | ~~Yalnızca Tailscale~~ → Cloudflare Tunnel (`tasks.<alan-adı>`) + API anahtarı — [DEPLOY.md](DEPLOY.md) |
 | Görsel dil | **"E-ink"**: açık + ters koyu mod, saf monokrom, monospace, hareketsiz → [DESIGN.md](DESIGN.md) |
 
 ### Ortam tespiti
 
-- `<sunucu>` 2026-09-20 akşamı itibarıyla **online** (Tailscale SSH: `ssh <sunucu>`); Docker sürümü ve boş portlar henüz incelenmedi. Geliştirme yine de yerelde, Mac'teki Docker ile başlar; deploy Faz 4'te.
+- Sunucu 2026-09-20 itibarıyla hazır (SSH erişimi var). Geliştirme yine de yerelde, Mac'teki Docker ile başlar; deploy Faz 4'te.
 - **Xcode 27.0** (lisans kabul edildi), Swift 6.4 ve XcodeGen kurulu — Mac fazının ön koşulları hazır.
 - Docker bu Mac'te **colima** ile çalışıyor (`colima start`).
 - Android Studio + SDK 37 kurulu. Node 24 + pnpm mevcut (parser testleri ve import script'i için).
@@ -50,7 +50,7 @@ PocketBase'in resmî SDK'ları JS ve Dart; Swift/Kotlin için resmî SDK yok. RE
 ## Mimari
 
 ```
-<sunucu> (Docker)                         İstemciler
+sunucu (Docker)                                 İstemciler
 ┌───────────────────────────────┐             ┌─ macOS · SwiftUI
 │ PocketBase (sürüm pinli)      │             │   menü çubuğu · global hotkey hızlı ekleme
 │  SQLite · Auth · REST · SSE   │◄── HTTPS ──┤   her zaman üstte yüzen dashboard paneli
@@ -90,8 +90,6 @@ PocketBase'in resmî SDK'ları JS ve Dart; Swift/Kotlin için resmî SDK yok. RE
 ---
 
 ## Uygulama adımları
-
-Repo: `/Users/<kullanıcı>/Desktop/software_projects/task_tracker`
 
 ```
 backend/   Dockerfile · docker-compose.yml · pb_migrations/ · pb_hooks/ (main, quickadd, views, triage, focus, tasks + lib/) · tests/unit · tests/api
@@ -171,7 +169,7 @@ docs/      api.md (tek sözleşme) · data-model.md · DESIGN.md · PLAN.md · D
 1. API istemcisi (OkHttp + SSE) + Odak + hızlı ekleme.
 2. Dashboard modu (ekran açık kalır) + ana ekran widget'ı (Glance).
 3. Triyaj (kaydırma hareketleri) → Hafta → Kanban → Projeler → Notlar.
-4. **Erişim kararı bu fazda verilir:** telefonda Tailscale always-on **ya da** hazırdaki Cloudflare Tunnel (`example.com`) ile yalnızca bu servisi yayınlama.
+4. **Erişim kararı bu fazda verilir:** telefonda Tailscale always-on **ya da** hazırdaki Cloudflare Tunnel (mevcut alan adı) ile yalnızca bu servisi yayınlama.
 
 Faz 2 ve 3 yalnızca `docs/api.md`'ye bağımlı; sıraları değiştirilebilir ya da paralel yürütülebilir.
 
@@ -179,7 +177,7 @@ Faz 2 ve 3 yalnızca `docs/api.md`'ye bağımlı; sıraları değiştirilebilir 
 
 > Aşağıdaki ilk plan `tailscale serve` öngörüyordu; uygulanan kurulum Cloudflare Tunnel + API anahtarıdır → [DEPLOY.md](DEPLOY.md). Kalan: sunucu dışı yedek, Todoist import'u.
 
-1. `<sunucu>` ayağa kalkınca: compose + migrations + hooks aktarımı, `tailscale serve` ile tailnet içi gerçek HTTPS, `pb_data` için zamanlanmış yedek.
+1. Sunucu ayağa kalkınca: compose + migrations + hooks aktarımı, `tailscale serve` ile tailnet içi gerçek HTTPS, `pb_data` için zamanlanmış yedek.
 2. Uygulamalarda server adresi ayarlardan değiştirilebilir (yerel → `https://<sunucu>.<tailnet>.ts.net`).
 3. `scripts/import-todoist.ts` — Todoist REST API → PocketBase. Todoist hesabı geçiş tamamlanana kadar silinmez.
 

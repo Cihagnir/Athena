@@ -3,7 +3,7 @@
 macOS ve Android uygulamalarının uyduğu **tek kaynak**. Backend: PocketBase v0.40.4 + `backend/pb_hooks`.
 Buradaki her davranış `backend/tests/api/api.test.js` ile sınanır; sözleşme değişirse test de değişir.
 
-- Yerel adres: `http://127.0.0.1:8090` · sunucu: `https://tasks.example.com` (+ API anahtarı)
+- Yerel adres: `http://127.0.0.1:8090` · sunucu: `https://tasks.<alan-adı>` (+ API anahtarı)
 - Tüm gövdeler JSON. Günler saat dilimsiz `YYYY-MM-DD` metnidir; "bugün" **server'ın** `TZ` ayarına göre belirlenir — istemci kendi saatinden gün hesaplamaz, yanıtlardaki `today` alanını kullanır.
 - Hata gövdesi: `{ "status": 400, "message": "…", "data": {} }`
 
@@ -15,7 +15,7 @@ PB=http://127.0.0.1:8090
 
 ## API anahtarı (yalnızca internete açık sunucu)
 
-`https://tasks.example.com` üzerinden gelen **her** istek — giriş ve realtime dahil — şu başlığı taşımalıdır:
+İnternete açık adres üzerinden gelen **her** istek — giriş ve realtime dahil — şu başlığı taşımalıdır:
 
 ```
 X-API-Key: <anahtar>

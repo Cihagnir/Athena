@@ -76,7 +76,7 @@ Planlama oturumunda (2026-09-20) alınan kararlar, gerekçeleri ve elenen altern
 
 ## 8. Erişim ve altyapı
 
-- Sunucu: `<sunucu>` (Tailscale `<ip>`, Tailscale SSH ile erişim). `~/.ssh/config`'deki Cloudflare Tunnel hostname'i (`server.example.com`) DNS'te çözülmüyor.
+- Sunucu: kendi Linux makinesi; erişim Tailscale SSH ile.
 - ~~Erişim şimdilik yalnızca Tailscale; public yüzey yok.~~ → **madde 14 ile değişti** (Cloudflare Tunnel + API anahtarı). Tailscale artık yalnızca sunucuya SSH için.
 - Apple Developer hesabı yok → yerel imza; bir özellik gerçekten gerektirirse alınır.
 
@@ -144,7 +144,7 @@ Tasarım önce tuvalde netleştirildi, sonra uygulandı. Kullanıcı kararları:
 
 ## 14. Deploy: Cloudflare Tunnel + API anahtarı *(2026-09-21)*
 
-**Karar:** Backend `<sunucu>`'de Docker ile çalışır ve `https://tasks.example.com` adresinden **Cloudflare Tunnel** ile internete açılır. Bu, madde 8'deki "erişim yalnızca Tailscale, public yüzey yok" kararının **yerini alır** (kullanıcı kararı). Koruma: uygulama düzeyinde **API anahtarı** (`X-API-Key`) + oturum + hız sınırlayıcı; yönetim paneli tünelde kapalı. Ayrıntı: [DEPLOY.md](DEPLOY.md).
+**Karar:** Backend sunucuda Docker ile çalışır ve `https://tasks.<alan-adı>` adresinden **Cloudflare Tunnel** ile internete açılır. Bu, madde 8'deki "erişim yalnızca Tailscale, public yüzey yok" kararının **yerini alır** (kullanıcı kararı). Koruma: uygulama düzeyinde **API anahtarı** (`X-API-Key`) + oturum + hız sınırlayıcı; yönetim paneli tünelde kapalı. Ayrıntı: [DEPLOY.md](DEPLOY.md).
 
 **Gerekçe:** Sunucuda alan adı ve Cloudflare kurulumu zaten vardı; Tailscale'in Mac'te (ve telefonda) çoğu zaman kapalı olması uygulamayı kullanılamaz kılardı. Bu karar Android'in erişim sorusunu da çözer ("Ertelenen kararlar"daki madde kapandı).
 

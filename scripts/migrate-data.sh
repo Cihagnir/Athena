@@ -5,7 +5,7 @@
 # Kullanıcı kaydı da taşınır → sunucuda giriş parolası yereldeki parola olur (API anahtarı değişmez).
 set -eu
 
-HOST="${TT_DEPLOY_HOST:-<sunucu>}"
+HOST="${TT_DEPLOY_HOST:?TT_DEPLOY_HOST verilmedi (ssh ile erişilen sunucu adı)}"
 DIR="${TT_DEPLOY_DIR:-task-tracker}"
 VOLUME="${TT_LOCAL_VOLUME:-backend_pb_data}"
 STAMP=$(date +%Y%m%d-%H%M%S)

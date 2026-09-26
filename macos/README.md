@@ -22,7 +22,7 @@ xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker \
 open build/Build/Products/Debug/TaskTracker.app
 ```
 
-- İlk açılışta giriş ekranı gelir: sunucu `http://127.0.0.1:8090`, e-posta ve parola `backend/.env` içindeki `TT_USER_*`. **API anahtarı** alanı yalnızca internete açık sunucu (`https://tasks.example.com`) için doldurulur — [../docs/DEPLOY.md](../docs/DEPLOY.md) → Mac uygulamasını sunucuya bağlamak.
+- İlk açılışta giriş ekranı gelir: sunucu `http://127.0.0.1:8090`, e-posta ve parola `backend/.env` içindeki `TT_USER_*`. **API anahtarı** alanı yalnızca internete açık sunucu için doldurulur — [../docs/DEPLOY.md](../docs/DEPLOY.md) → Mac uygulamasını sunucuya bağlamak.
 - Yeni dosya ekleyince ya da `project.yml` değişince `xcodegen generate` yeniden çalıştırılır. Xcode'da açmak istersen: `open TaskTracker.xcodeproj`.
 - İmza yerel (ad-hoc): Apple Developer hesabı yok, uygulama yalnızca bu Mac'te çalışır.
 

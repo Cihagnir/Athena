@@ -3,7 +3,7 @@
 # Sunucudaki .env, tunnel/ (tünel kimliği) ve veri klasörüne DOKUNMAZ. Ayrıntı: docs/DEPLOY.md
 set -eu
 
-HOST="${TT_DEPLOY_HOST:-<sunucu>}"
+HOST="${TT_DEPLOY_HOST:?TT_DEPLOY_HOST verilmedi (ssh ile erişilen sunucu adı)}"
 DIR="${TT_DEPLOY_DIR:-task-tracker}"
 cd "$(dirname "$0")/.."
 

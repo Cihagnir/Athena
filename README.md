@@ -1,12 +1,46 @@
-# task_tracker
+# Athena — task + not sistemi
 
 Kişisel, self-hosted **task + not sistemi**. Todoist'in yerine; tamamen modifiye edilebilir, klavye-öncelikli, **e-ink estetiğinde** (monokrom · monospace · hareketsiz).
 
-- **Backend:** PocketBase (`<sunucu>` üzerinde Docker) — ortak iş mantığı `pb_hooks` içinde
+- **Backend:** PocketBase (Docker) — ortak iş mantığı `pb_hooks` içinde
 - **macOS:** Swift + SwiftUI — menü çubuğu, global hotkey'ler, yüzen dashboard panelleri
-- **Android:** ayrı native uygulama (teknoloji kararı ertelendi)
+- **Android:** ayrı native uygulama (ertelendi)
 
-**İş takibi:** Linear → proje **Athena** (https://linear.app/<workspace>/project/athena-4106d99abde6) — yapılanlar `Done`, bilinen eksikler / doğrulanmamış noktalar / ertelenenler `Todo` ve `Backlog` (CIH-220…250). Yeni eksik fark edilince oraya issue aç.
+## Dallar
+
+| Dal | Ne için |
+|---|---|
+| **`local-dev`** | Kendi bilgisayarında çalıştırmak. Backend Docker'da yerelde, Mac uygulaması ona bağlanır. Sunucu, alan adı, tünel gerekmez. |
+| **`main`** | `local-dev` + **sunucu katmanı**: backend'i kendi sunucuna kurup Cloudflare Tunnel ve API anahtarıyla internete açmak ([docs/DEPLOY.md](docs/DEPLOY.md), `scripts/deploy.sh`, `scripts/migrate-data.sh`, `backend/tunnel/`). |
+
+Geliştirme `local-dev`'de yapılır; `main` onu merge eder. İki dalda uygulama kodu aynıdır.
+
+## Yerelde çalıştırma (`local-dev`)
+
+Ön koşullar: Docker + Compose (Mac'te ör. [colima](https://github.com/abiosoft/colima) ya da Docker Desktop), Xcode 27, `brew install xcodegen`. Testler için Node 24 + pnpm.
+
+```sh
+git clone -b local-dev <repo> athena && cd athena
+scripts/setup-local.sh        # .env üretir (rastgele parolalar), backend'i başlatır, giriş bilgilerini yazar
+```
+
+Sonra Mac uygulaması:
+
+```sh
+cd macos && xcodegen generate
+xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker -configuration Debug -derivedDataPath build build
+open build/Build/Products/Debug/TaskTracker.app
+```
+
+İlk açılışta giriş ekranı: sunucu `http://127.0.0.1:8090`, e-posta ve parola `setup-local.sh`'ın yazdığı (ya da `backend/.env` → `TT_USER_*`), API anahtarı boş. Ayrıntı ve kısayollar: [macos/README.md](macos/README.md).
+
+Backend testleri: `cd backend && pnpm test && pnpm test:api`. Yönetim paneli: `http://127.0.0.1:8090/_/` (`backend/.env` → `PB_SUPERUSER_*`).
+
+## Sunucuya kurmak (`main`)
+
+[docs/DEPLOY.md](docs/DEPLOY.md): mimari, güvenlik katmanları, sıfırdan kurulum, güncelleme, yerel veriyi taşıma, yedekler.
+
+## Dokümanlar
 
 | Doküman | İçerik |
 |---|---|
@@ -16,59 +50,24 @@ Kişisel, self-hosted **task + not sistemi**. Todoist'in yerine; tamamen modifiy
 | [docs/api.md](docs/api.md) | İki uygulamanın da uyduğu API sözleşmesi (`curl` örnekleriyle) |
 | [docs/data-model.md](docs/data-model.md) | Koleksiyonlar ve alanlar |
 | [backend/README.md](backend/README.md) | Backend'i çalıştırma, testler, sürüm yükseltme |
-| [docs/DEPLOY.md](docs/DEPLOY.md) | Sunucu kurulumu: Cloudflare Tunnel, API anahtarı, güncelleme, veri taşıma, yedekler |
 | [macos/README.md](macos/README.md) | Mac uygulaması: çalıştırma, kısayollar, mimari, yeni aksiyon/görünüm ekleme rehberi |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | *(yalnızca `main`)* Sunucu kurulumu |
 
 ```
 backend/   PocketBase (Docker) + pb_hooks iş mantığı + testler
 macos/     Swift + SwiftUI uygulaması: Core (API paketi) + TaskTracker (arayüz)
+scripts/   setup-local.sh (yerel kurulum); main'de ayrıca deploy.sh, migrate-data.sh
 docs/      plan, kararlar, tasarım, API sözleşmesi
 ```
 
----
-
-## Durum — 2026-09-20
+## Durum
 
 | Faz | Durum |
 |---|---|
 | 0 · İskelet | ✅ |
 | 1 · Backend | ✅ birim 39/39, API 19/19 |
-| 2 · macOS | **adım 1–4 ✅** (tüm görünümler + hızlı not `⌃⌥N`) — yüzen mini/liste paneli (`⌃⌥M` / `⌃⌥L`) + zamanlayıcı; öncesi: giriş, Odak ekranı, hızlı ekleme paneli (global `⌃⌥Space`), Ayarlar, aksiyon kaydı, tam ekran (`⌃⌘F`), menü çubuğu öğesi (`▸ 3/7`), otomatik başlama, `⌘K` komut paleti, `?` yardım. Core paketi 19/19 — yerel sunucuya **ve** internet adresine karşı. |
-| 4 · Deploy | ✅ *(2026-09-21)* — sistem sunucuda: `https://tasks.example.com` (Cloudflare Tunnel + API anahtarı); veri taşındı, Mac uygulaması sunucuya bağlı. Kalan: sunucu dışı yedek, Todoist import'u. → [docs/DEPLOY.md](docs/DEPLOY.md) |
+| 2 · macOS | ✅ tüm görünümler (Odak, Triyaj, Hafta, Kanban, Projeler, Notlar), hızlı ekleme `⌃⌥Space`, hızlı not `⌃⌥N`, yüzen mini/liste paneli `⌃⌥M` / `⌃⌥L`, zamanlayıcı, `⌘K` komut paleti, `?` yardım, menü çubuğu öğesi, tam ekran, otomatik başlama. Core paketi 19/19. |
+| 4 · Deploy | ✅ sunucu katmanı `main`'de — Cloudflare Tunnel + API anahtarı |
 | 3 · Android | ertelendi |
 
-Tasarım: [docs/DESIGN.md](docs/DESIGN.md) + görsel taslak tuvali (bağlantısı dokümanın başında).
-
-### Devam ederken ilk adım
-
-**Faz 2'nin planlanan dört adımı + task düzenleme tamam.** Plan: Mac uygulaması bir hafta gerçek kullanımda (artık sunucuya bağlı) incelenip iyileştirilecek. Faz 3 (Android) ertelendi. Ayrıntı ve sonraki adımlar: [macos/README.md](macos/README.md) → Sıradakiler.
-
-### Mac uygulamasını çalıştırma
-
-```sh
-cd macos && xcodegen generate
-xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker -configuration Debug -derivedDataPath build build
-open build/Build/Products/Debug/TaskTracker.app
-```
-
-Mimari, "nasıl yapılır" rehberleri ve bilinen sapmalar: [macos/README.md](macos/README.md).
-
-### Backend'i çalıştırma (yerel — yalnızca geliştirme ve testler için; asıl sistem sunucuda)
-
-```sh
-colima start && cd backend && docker compose up -d     # API: http://127.0.0.1:8090 · Admin UI: /_/
-pnpm test && pnpm test:api
-```
-
-Giriş bilgileri `backend/.env` içinde (yerelde üretildi, repoya girmez).
-
-### Ortam notları
-
-- **Sunucu:** `<sunucu>` — Tailscale SSH (`ssh <sunucu>`), IP `<ip>`. Docker sürümü / boş portları henüz **incelenmedi** (Faz 4).
-- **Bu Mac:** macOS 26 · Xcode 27.0 · Swift 6.4 · XcodeGen · Docker 29 (**colima**) + Compose 5.2 · Node 24 + pnpm 11 · Python 3.14 · Android Studio + SDK 37 · editör: Zed
-- **Kurulu olmayanlar:** Rust, Flutter
-- Todoist hesabı geçiş tamamlanana kadar **silinmeyecek**; import script'i Faz 4'te.
-
-### Yeni oturumda Claude'a söylenecek
-
-> "`README.md` ve `docs/` altındaki planı oku, kaldığımız yerden devam edelim."
+Bilinen eksikler ve sıradakiler: [macos/README.md](macos/README.md) → Sıradakiler.
