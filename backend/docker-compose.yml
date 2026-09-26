@@ -1,3 +1,6 @@
+# Proje adı sabit: volume ve ağ adları klasör adına bağlı olmasın (her klon aynı veriyi görsün).
+name: task-tracker
+
 services:
   pocketbase:
     build: .
