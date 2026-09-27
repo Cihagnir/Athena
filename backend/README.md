@@ -25,9 +25,11 @@ tests/api/            çalışan sunucuya karşı uçtan uca testler
 
 ## Çalıştırma
 
+En kısa yol (repo kökünden): `scripts/setup-local.sh` — `.env` yoksa `.env.example`'dan rastgele parolalarla üretir, PocketBase'i başlatır, sağlığını bekler ve uygulamaya girilecek bilgileri yazar. Elle:
+
 ```sh
-colima start                 # Docker daemon (bu Mac'te colima)
-cp .env.example .env         # ilk kurulumda; parolaları doldur
+colima start                 # Docker daemon (Mac'te colima ya da Docker Desktop)
+cp .env.example .env         # ilk kurulumda; parolaları doldur (aşağıdaki tablo)
 docker compose up -d --build
 ```
 
@@ -36,11 +38,27 @@ docker compose up -d --build
 - `pb_hooks` ya da `pb_migrations` değişince: `docker compose restart`
 - Loglar: `docker compose logs -f`
 
-## Sunucu
+## Yapılandırma (`.env`)
 
-Sunucu kurulumu, API anahtarı, tünel, yedekler ve veri taşıma: [../docs/DEPLOY.md](../docs/DEPLOY.md). Güncelleme göndermek: `../scripts/deploy.sh`.
+Tüm ayarlar `backend/.env` içindeki ortam değişkenleridir (`docker compose` `env_file` ile okur, hook'lar `$os.getenv` ile alır). Şablon: [`.env.example`](.env.example). Dosya repoya girmez; `scripts/deploy.sh` sunucudakine dokunmaz.
+
+| Değişken | Ne için | Yerel (`setup-local.sh`) | Sunucu ([DEPLOY.md](../docs/DEPLOY.md)) |
+|---|---|---|---|
+| `TZ` | "bugün / yarın" hesabının saat dilimi | `Europe/Istanbul` | aynı |
+| `PB_PORT` | PocketBase'in `127.0.0.1`'de dinlediği port | `8090` | boş bir port |
+| `PB_DATA` | verinin duracağı klasör; boşsa Docker volume (`task-tracker_pb_data`) | boş | `/home/<kullanıcı>/task-tracker/data` |
+| `PB_SUPERUSER_EMAIL` / `_PASSWORD` | yönetim paneli (`/_/`) hesabı; her açılışta `.env`'den güncellenir | rastgele üretilir | `openssl rand -hex 16` |
+| `TT_USER_EMAIL` / `_PASSWORD` | uygulamaların giriş yaptığı tek kullanıcı; yoksa açılışta oluşturulur, sonra yalnızca Admin UI'dan değişir | rastgele üretilir | kendin belirle |
+| `TT_API_KEYS` | virgülle ayrılmış anahtarlar; doluysa tünelden gelen **her** istek `X-API-Key` taşımalı (`403`). Cihaz başına bir tane önerilir | boş (kapı kapalı) | `openssl rand -hex 32` |
+| `TT_PUBLIC` | `1`: hız sınırlayıcı, Cloudflare gerçek istemci IP'si, günlük yedek (04:00, son 14) | boş | `1` |
 
 `.env` değişince `docker compose restart` **yetmez** (ortam değişkenleri yeniden okunmaz): `docker compose up -d`.
+
+Sunucuya özgü diğer iki yer: `tunnel/config.yml` (Cloudflare Tunnel; şablon `tunnel/config.example.yml`, yalnızca `main` dalında) ve Mac'te `TT_DEPLOY_HOST` / `TT_DEPLOY_DIR` (deploy betikleri için). Uygulama tarafında sunucu adresi ve API anahtarı Ayarlar (`⌘,`) ekranından girilir.
+
+## Sunucu
+
+Sunucu kurulumu, API anahtarı, tünel, yedekler ve veri taşıma: [../docs/DEPLOY.md](../docs/DEPLOY.md). Güncelleme göndermek: `TT_DEPLOY_HOST=<sunucu> ../scripts/deploy.sh`.
 
 ## Testler
 
