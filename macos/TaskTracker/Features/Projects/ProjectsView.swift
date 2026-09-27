@@ -54,7 +54,7 @@ struct ProjectsView: View {
                         }
                         ForEach(store.ordered) { project in
                             if store.mode == .renaming && project.id == store.selectedID {
-                                nameField($store.nameInput, prefix: "#", hint: "↵ kaydet", store)
+                                nameField($store.nameInput, prefix: "·", hint: "↵ kaydet", store)
                             } else {
                                 row(project, selected: project.id == store.selectedID)
                                     .id(project.id)
@@ -84,7 +84,7 @@ struct ProjectsView: View {
     private func row(_ project: Project, selected: Bool) -> some View {
         let dim = project.status == .done
         return HStack(spacing: 12) {
-            Text("#" + project.name).font(Theme.font(bold: selected)).lineLimit(1)
+            Text(project.name).font(Theme.font(bold: selected)).lineLimit(1)
             Spacer(minLength: 8)
             Text(project.area == .work ? "iş" : "kş")
             Text(Self.statusText(project.status)).lineLimit(1).frame(width: 88, alignment: .leading)
@@ -100,7 +100,7 @@ struct ProjectsView: View {
         if let project = store.selected {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("#" + project.name).font(Theme.font(Theme.Size.title, bold: true))
+                    Text(project.name).font(Theme.font(Theme.Size.title, bold: true))
                     HStack(spacing: 12) {
                         Text(project.area == .work ? "iş" : "kişisel")
                         Text(Self.statusText(project.status))

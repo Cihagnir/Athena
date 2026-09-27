@@ -74,7 +74,7 @@ Renk olmadığı için her anlamın sabit bir biçimi vardır:
 - **Onay geri bildirimi:** tek karelik ters çevirme "flaşı" (e-ink'in tam yenilemesine gönderme) — temadaki tek "hareket"; ayarlardan kapatılabilir.
 - **Pencere düğmeleri:** sistemin renkli üçlüsü gizlenir; sol üstte `ink2` gliflerle `✕ – □` (kapat · küçült · tam ekran).
 - **Task detayı:** seçili satırın altında, başlık sütunuyla hizalı açılır: **bold** başlık, açıklama, 1 px çizgi, sonra `ad  değer` satırları (durum, öncelik, başla, son, proje, alan). Ayrı pencere ya da yan panel yok.
-- **Projeler:** solda liste (`#ad · alan · durum`; bitmiş proje `ink3`), sağda seçili projenin **tanımı**. Tanım düzenlenirken alan 2 px çerçeve alır; kaydet düğmesi yok, yazarken kendiliğinden kaydedilir.
+- **Projeler:** solda liste (`ad · alan · durum`; bitmiş proje `ink3`). Bu ekranda `#` öneki yoktur — ad zaten proje olduğunu söyler; `#ad` yazımı task/not satırlarında ve hızlı ekleme sözdiziminde kalır, sağda seçili projenin **tanımı**. Tanım düzenlenirken alan 2 px çerçeve alır; kaydet düğmesi yok, yazarken kendiliğinden kaydedilir.
 - **Notlar (sticky düzen):** sabit yükseklikte (176) kart ızgarası; sütun sayısı genişliğe göre. Kart: **bold** başlık · `ink2` gövde · altta `tarih · #proje`. Renk yok: **sabitlenen not 2 px çerçeve + `▪ sabit`** ile ayrışır ve en başta durur; seçili kart tümüyle ters çevrilir. Editör tam alandır: ilk satır başlık.
 - **Hızlı not paneli:** hızlı eklemeyle aynı konum ve çerçeve; çok satırlı alan, `↵` kaydeder (panel açık kalır), `⇧↵` yeni satır; ilk satırdaki `#proje` altı çizilir.
 - **Simge:** uygulama, menü çubuğu ve dock simgeleri de tek renk, düz, glif tabanlı. SF Symbols kullanılmaz; gerekirse Unicode glif (`▸ ✕ ░ █ ↑ ↓`).
