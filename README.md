@@ -36,6 +36,8 @@ open build/Build/Products/Debug/TaskTracker.app
 
 Backend testleri: `cd backend && pnpm test && pnpm test:api`. Yönetim paneli: `http://127.0.0.1:8090/_/` (`backend/.env` → `PB_SUPERUSER_*`).
 
+Tüm ayarlar `backend/.env` içindedir; değişkenlerin tablosu: [backend/README.md → Yapılandırma](backend/README.md#yapılandırma-env).
+
 ## Sunucuya kurmak (`main`)
 
 [docs/DEPLOY.md](docs/DEPLOY.md): mimari, güvenlik katmanları, sıfırdan kurulum, güncelleme, yerel veriyi taşıma, yedekler.
