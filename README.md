@@ -24,12 +24,10 @@ git clone -b local-dev <repo> athena && cd athena
 scripts/setup-local.sh        # .env üretir (rastgele parolalar), backend'i başlatır, giriş bilgilerini yazar
 ```
 
-Sonra Mac uygulaması:
+Sonra Mac uygulaması — Release derler ve `/Applications/TaskTracker.app`'e kurar (güncellemek için aynı komut):
 
 ```sh
-cd macos && xcodegen generate
-xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker -configuration Debug -derivedDataPath build build
-open build/Build/Products/Debug/TaskTracker.app
+scripts/install-mac.sh
 ```
 
 İlk açılışta giriş ekranı: sunucu `http://127.0.0.1:8090`, e-posta ve parola `setup-local.sh`'ın yazdığı (ya da `backend/.env` → `TT_USER_*`), API anahtarı boş. Ayrıntı ve kısayollar: [macos/README.md](macos/README.md).
@@ -58,7 +56,7 @@ Tüm ayarlar `backend/.env` içindedir; değişkenlerin tablosu: [backend/README
 ```
 backend/   PocketBase (Docker) + pb_hooks iş mantığı + testler
 macos/     Swift + SwiftUI uygulaması: Core (API paketi) + TaskTracker (arayüz)
-scripts/   setup-local.sh (yerel kurulum); main'de ayrıca deploy.sh, migrate-data.sh
+scripts/   setup-local.sh (backend), install-mac.sh (Mac uygulaması), make-icon.py; main'de ayrıca deploy.sh, migrate-data.sh
 docs/      plan, kararlar, tasarım, API sözleşmesi
 ```
 
