@@ -53,6 +53,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Oturum açılışında başlatıldıysa arka planda kalır: menü çubuğu öğesi ve global
     /// kısayollar çalışır, pencere ilk istendiğinde açılır.
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Login item kaydı paketin yoluna bağlıdır; uygulama taşındıysa (build/ → /Applications)
+        // kaydı yenilemek yeterlidir. Kapalıysa dokunulmaz.
+        if LoginItem.isEnabled { try? LoginItem.set(true) }
         guard LoginItem.launchedAtLogin else { return }
         DispatchQueue.main.async {
             for window in NSApp.windows where window.canBecomeMain { window.close() }

@@ -16,7 +16,11 @@ targets:
   TaskTracker:
     type: application
     platform: macOS
-    sources: [TaskTracker]
+    sources:
+      - path: TaskTracker
+        excludes: [Resources]
+      - path: TaskTracker/Resources/AppIcon.icns
+        buildPhase: resources
     dependencies:
       - package: TaskTrackerCore
       - package: KeyboardShortcuts
@@ -25,6 +29,10 @@ targets:
       properties:
         CFBundleDisplayName: task_tracker
         LSApplicationCategoryType: public.app-category.productivity
+        # scripts/make-icon.py üretir → TaskTracker/Resources/AppIcon.icns
+        CFBundleIconFile: AppIcon
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # Sunucu yerelde ya da tailnet içinde düz http olabilir (Faz 4'te https).
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true

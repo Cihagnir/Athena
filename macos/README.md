@@ -14,6 +14,10 @@ task_tracker'ın macOS uygulaması: Swift 6 + SwiftUI (gerektiği yerde AppKit),
 
 Ön koşullar: Xcode 27 (lisans kabul edilmiş + `xcodebuild -runFirstLaunch` bir kez çalıştırılmış), `brew install xcodegen`, backend ayakta ([../backend/README.md](../backend/README.md)).
 
+**Kurulum (günlük kullanım):** `scripts/install-mac.sh` — Release derler, çalışan uygulamayı kapatır, `/Applications/TaskTracker.app`'e kopyalar ve açar. Ayarlar `UserDefaults`'ta olduğu için güncelleme ayarları bozmaz; login item açıksa uygulama yeni yolunu ilk açılışta kendisi yeniler. Simge: `scripts/make-icon.py` → `TaskTracker/Resources/AppIcon.icns` (repoda hazır durur).
+
+**Geliştirme (Debug, DEBUG ortam değişkenleri çalışır):**
+
 ```sh
 cd macos
 xcodegen generate            # project.yml → TaskTracker.xcodeproj (repoya girmez)
@@ -21,6 +25,8 @@ xcodebuild -project TaskTracker.xcodeproj -scheme TaskTracker \
   -configuration Debug -derivedDataPath build build
 open build/Build/Products/Debug/TaskTracker.app
 ```
+
+Debug ve `/Applications` kopyası aynı bundle id'yi taşır; ikisini aynı anda açma (global kısayollar çakışır).
 
 - İlk açılışta giriş ekranı gelir: sunucu `http://127.0.0.1:8090`, e-posta ve parola `backend/.env` içindeki `TT_USER_*`. **API anahtarı** alanı yalnızca internete açık sunucu için doldurulur — [../docs/DEPLOY.md](../docs/DEPLOY.md) → Mac uygulamasını sunucuya bağlamak.
 - Yeni dosya ekleyince ya da `project.yml` değişince `xcodegen generate` yeniden çalıştırılır. Xcode'da açmak istersen: `open TaskTracker.xcodeproj`.
